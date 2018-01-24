@@ -319,3 +319,7 @@ circle.c3-circle {
 circle.c3-circle._expanded_ {
   display: inline;
 }
+
+#main.container-fluid {
+  position: relative;
+}

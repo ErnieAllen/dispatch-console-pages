@@ -208,7 +208,7 @@ var QDR = (function(QDR) {
     var timer;
     var updateGrid = function () {
       $timeout( function () {
-        allAddressInfo(null, function () {console.log('done')})
+        allAddressInfo(null, function () {})
         expandGridToContent($scope.addressesData.length)
       })
     }

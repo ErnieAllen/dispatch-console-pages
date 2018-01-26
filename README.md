@@ -19,7 +19,8 @@ Pages implemented are:
 
 ## In index.html
 
-```<link rel="stylesheet" href="plugins/dispatch/css/plugin.css" type="text/css"/>
+```
+<link rel="stylesheet" href="plugins/dispatch/css/plugin.css" type="text/css"/>
 <link rel="stylesheet" href="plugins/dispatch/css/dispatch.css" type="text/css"/>
 <link rel="stylesheet" href="plugins/dispatch/css/dispatchpf.css" type="text/css"/>
 

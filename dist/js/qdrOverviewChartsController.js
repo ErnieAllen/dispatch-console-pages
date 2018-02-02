@@ -16,6 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+'use strict';
+/* global angular */
 /**
  * @module QDR
  */
@@ -23,32 +25,32 @@ var QDR = (function(QDR) {
 
   QDR.module.controller('QDR.OverviewChartsController', function ($scope, QDRService, QDRChartService, $timeout) {
 
-    $scope.overviewCharts = []
-    var updateTimer;
+    $scope.overviewCharts = [];
+    let updateTimer;
 
     // called when it is time to update the chart's data
     var sum = function (request, saveResponse) {
-      var attrs = angular.copy(request.overrideAttrs)
-      var totalAttr = attrs.shift() // remove totals attr
-      var attrEntities = [{entity: request.entity, attrs: attrs}]
+      let attrs = angular.copy(request.overrideAttrs);
+      let totalAttr = attrs.shift(); // remove totals attr
+      let attrEntities = [{entity: request.entity, attrs: attrs}];
       QDRService.management.topology.fetchAllEntities(attrEntities, function (responses) {
-        var total = 0
-        var response = {attributeNames: [totalAttr, 'name'], results: [[]]}
+        let total = 0;
+        let response = {attributeNames: [totalAttr, 'name'], results: [[]]};
         // for each router
-        for (var router in responses) {
-          var record = responses[router][request.entity]
-          var accessor = charts.find( function (chart) { return chart.nodeId === request.nodeId}).accessor
+        for (let router in responses) {
+          let record = responses[router][request.entity];
+          let accessor = charts.find( function (chart) { return chart.nodeId === request.nodeId;}).accessor;
           // for each attribute-value (ie each address or each link)
-          for (var i=0; i<record.results.length; i++) {
-            total += accessor(record.attributeNames, record.results[i])
+          for (let i=0; i<record.results.length; i++) {
+            total += accessor(record.attributeNames, record.results[i]);
           }
         }
-        response.results[0][0] = total
-        response.results[0][1] = request.names()[0]
-        saveResponse(request.nodeId, request.entity, response)
-      })
-    }
-    var charts = [
+        response.results[0][0] = total;
+        response.results[0][1] = request.names()[0];
+        saveResponse(request.nodeId, request.entity, response);
+      });
+    };
+    let charts = [
 
       {
         nodeId:     '///Throughput/',
@@ -56,14 +58,14 @@ var QDR = (function(QDR) {
         name:       'throughput',
         overrideAttrs: ['throughput', 'deliveriesEgress'],
         attr:       'throughput',
-        type:       "rate",
+        type:       'rate',
         hideLabel:  true,
         hideLegend:  true,
         rateWindow: 5000,   // update data once every 5 seconds
         visibleDuration: 1, // show data for the last 1 minute
         forceCreate: true,
         accessor: function (attributes, results) {
-          return results[attributes.indexOf('deliveriesEgress')]
+          return results[attributes.indexOf('deliveriesEgress')];
         },
         override: sum  // called to fetch the chart data
       },
@@ -80,29 +82,28 @@ var QDR = (function(QDR) {
         accessor: function (attributes, results) {
           return results[attributes.indexOf('linkType')] === 'endpoint' && results[attributes.indexOf('linkDir')] === 'out'
             ? results[attributes.indexOf('unsettledCount')] + results[attributes.indexOf('undeliveredCount')]
-            : 0
+            : 0;
         },
         now: new Date(),
         override: sum  // called to fetch the chart data
       }
-    ]
+    ];
     $scope.overviewCharts = charts.map( function (chart) {
-      var c = QDRChartService.registerChart(chart)
-      return new QDRChartService.pfAreaChart(c, c.id(), true)
-    })
+      let c = QDRChartService.registerChart(chart);
+      return new QDRChartService.pfAreaChart(c, c.id(), true);
+    });
 
 
     // redraw the chart every update period
     var updateCharts = function () {
       $scope.overviewCharts.forEach(function (svgChart) {
         svgChart.tick(svgChart.chart.id()); // on this page we are using the chart.id() as the div id in which to render the chart
-      })
-      var updateRate = localStorage['updateRate'] ?  localStorage['updateRate'] : 1000;
-    }
+      });
+    };
 
     var createCharts = function () {
       // ensure the div for our chart is loaded in the dom
-      var div = angular.element(".chartContainer");
+      let div = angular.element('.chartContainer');
       if (!div.width()) {
         setTimeout(createCharts, 100);
         return;
@@ -110,22 +111,23 @@ var QDR = (function(QDR) {
       // create an svg object for each chart
       $scope.overviewCharts.forEach ( function (c) {
         // tell c3 to create the svg
-        c.generate()
-      })
+        c.generate();
+      });
       // redraw the charts once every second
-      updateTimer = setInterval(updateCharts, 1000);
-    }
+      const updateRate = localStorage['updateRate'] ?  localStorage['updateRate'] : 1000;
+      updateTimer = setInterval(updateCharts, updateRate);
+    };
     $timeout( function () {
-      createCharts()
-    })
+      createCharts();
+    });
 
-    $scope.$on("$destroy", function(event) {
+    $scope.$on('$destroy', function() {
       if (updateTimer)
-        clearInterval(updateTimer)
+        clearInterval(updateTimer);
       $scope.overviewCharts.forEach( function (svg) {
-        QDRChartService.unRegisterChart(svg.chart)
-      })
-    })
+        QDRChartService.unRegisterChart(svg.chart);
+      });
+    });
   });
   return QDR;
 

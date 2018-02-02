@@ -16,6 +16,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+'use strict';
+/* global angular */
+
 /**
  * @module QDR
  */
@@ -26,35 +29,35 @@ var QDR = (function(QDR) {
 
     $scope.chart = chart;
     $scope.dialogSvgChart = null;
-    var updateTimer = null;
-    $scope.svgDivId = "dialogChart";    // the div id for the svg chart
+    let updateTimer = null;
+    $scope.svgDivId = 'dialogChart';    // the div id for the svg chart
 
     $scope.showChartsPage = function () {
       cleanup();
       $uibModalInstance.close(true);
-      $location.path(QDR.pluginRoot + "/charts");
+      $location.path(QDR.pluginRoot + '/charts');
     };
 
     $scope.addHChart = function () {
       QDRChartService.addHDash($scope.chart);
       cleanup();
       $uibModalInstance.close(true);
-    }
+    };
 
     $scope.addToDashboardLink = function () {
-      var href = "#/" + QDR.pluginName + "/charts";
-      var size = angular.toJson({
-                  size_x: 2,
-                  size_y: 2
-                });
+      let href = '#/' + QDR.pluginName + '/charts';
+      let size = angular.toJson({
+        size_x: 2,
+        size_y: 2
+      });
 
-      var params = angular.toJson({chid: $scope.chart.id()});
-      var title = "Dispatch - " + nodeName;
-      return "/hawtio/#/dashboard/add?tab=dashboard" +
-        "&href=" + encodeURIComponent(href) +
-        "&routeParams=" + encodeURIComponent(params) +
-        "&title=" + encodeURIComponent(title) +
-        "&size=" + encodeURIComponent(size);
+      let params = angular.toJson({chid: $scope.chart.id()});
+      let title = 'Dispatch - ' + nodeName;
+      return '/hawtio/#/dashboard/add?tab=dashboard' +
+        '&href=' + encodeURIComponent(href) +
+        '&routeParams=' + encodeURIComponent(params) +
+        '&title=' + encodeURIComponent(title) +
+        '&size=' + encodeURIComponent(size);
     };
 
 
@@ -68,18 +71,18 @@ var QDR = (function(QDR) {
 
     $scope.isOnChartsPage = function () {
       return $scope.chart.dashboard;
-    }
+    };
 
     var showChart = function () {
       // we need a width and height before generating the chart
-      var div = angular.element("#pfDialogChart");
+      let div = angular.element('#pfDialogChart');
       if (!div.width()) {
         setTimeout(showChart, 100);
         return;
       }
-      $scope.pfDialogSvgChart = new QDRChartService.pfAreaChart($scope.chart, 'pfDialogChart')
+      $scope.pfDialogSvgChart = new QDRChartService.pfAreaChart($scope.chart, 'pfDialogChart');
       updateDialogChart();
-    }
+    };
     showChart();
 
     var updateDialogChart = function () {
@@ -87,9 +90,9 @@ var QDR = (function(QDR) {
         $scope.pfDialogSvgChart.tick();
       }
       if (updateTimer)
-        clearTimeout(updateTimer)
+        clearTimeout(updateTimer);
       updateTimer = setTimeout(updateDialogChart, 1000);
-    }
+    };
 
     var cleanup = function () {
       if (updateTimer) {
@@ -99,42 +102,42 @@ var QDR = (function(QDR) {
       if (!$scope.chart.hdash && !$scope.chart.dashboard)
         QDRChartService.unRegisterChart($scope.chart);     // remove the chart
 
-    }
+    };
     $scope.ok = function () {
       cleanup();
       $uibModalInstance.close(true);
-      };
+    };
 
     $scope.editChart = function () {
-      doDialog('tmplChartConfig.html', chart)
-    }
+      doDialog('tmplChartConfig.html', chart);
+    };
 
     function doDialog(template, chart) {
 
-      var d = $uibModal.open({
-      backdrop: true,
-      keyboard: true,
-      backdropClick: true,
-      templateUrl: QDR.templatePath + template,
-      controller: "QDR.ChartDialogController",
-      resolve: {
-        chart: function() {
-          return chart;
-        },
-        updateTick: function () {
-          return function () {};
-        },
-        dashboard: function () {
-          return $scope;
-        },
-        adding: function () {
-          return true
+      $uibModal.open({
+        backdrop: true,
+        keyboard: true,
+        backdropClick: true,
+        templateUrl: QDR.templatePath + template,
+        controller: 'QDR.ChartDialogController',
+        resolve: {
+          chart: function() {
+            return chart;
+          },
+          updateTick: function () {
+            return function () {};
+          },
+          dashboard: function () {
+            return $scope;
+          },
+          adding: function () {
+            return true;
+          }
         }
-      }
-      }).result.then(function(result) {
-        $scope.ok()
+      }).result.then(function() {
+        $scope.ok();
       });
-    };
+    }
 
   });
 

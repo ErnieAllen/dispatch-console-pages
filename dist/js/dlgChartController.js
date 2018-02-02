@@ -16,47 +16,49 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+'use strict';
+/* global angular */
 /**
  * @module QDR
  */
 var QDR = (function(QDR) {
 
   // controller for the edit/configure chart dialog
-  QDR.module.controller("QDR.ChartDialogController", function($scope, QDRChartService, $location, $uibModalInstance, chart, updateTick, dashboard, adding) {
-    var dialogSvgChart = null;
-    $scope.svgDivId = "dialogEditChart";    // the div id for the svg chart
+  QDR.module.controller('QDR.ChartDialogController', function($scope, QDRChartService, $location, $uibModalInstance, chart, updateTick, dashboard, adding) {
+    let dialogSvgChart = null;
+    $scope.svgDivId = 'dialogEditChart';    // the div id for the svg chart
 
-    var updateTimer = null;
+    let updateTimer = null;
     $scope.chart = chart;  // the underlying chart object from the dashboard
     $scope.dialogChart = $scope.chart.copy(); // the chart object for this dialog
     $scope.userTitle = $scope.chart.title();
 
     $scope.$watch('userTitle', function(newValue, oldValue) {
-    if (newValue !== oldValue) {
-      $scope.dialogChart.title(newValue);
-      dialogSvgChart.tick($scope.svgDivId);
-    }
-    })
-    $scope.$watch("dialogChart.areaColor", function (newValue, oldValue) {
       if (newValue !== oldValue) {
-        if (dialogSvgChart)
-         dialogSvgChart.tick($scope.svgDivId);
+        $scope.dialogChart.title(newValue);
+        dialogSvgChart.tick($scope.svgDivId);
       }
-    })
-    $scope.$watch("dialogChart.lineColor", function (newValue, oldValue) {
+    });
+    $scope.$watch('dialogChart.areaColor', function (newValue, oldValue) {
       if (newValue !== oldValue) {
         if (dialogSvgChart)
           dialogSvgChart.tick($scope.svgDivId);
       }
-    })
-    $scope.$watch("dialogChart.type", function (newValue, oldValue) {
+    });
+    $scope.$watch('dialogChart.lineColor', function (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        if (dialogSvgChart)
+          dialogSvgChart.tick($scope.svgDivId);
+      }
+    });
+    $scope.$watch('dialogChart.type', function (newValue, oldValue) {
       if (newValue !== oldValue) {
         if (dialogSvgChart) {
-          dialogSvgChart.chart.visibleDuration = newValue === 'rate' ? 0.25 : 1
+          dialogSvgChart.chart.visibleDuration = newValue === 'rate' ? 0.25 : 1;
           dialogSvgChart.tick($scope.svgDivId);
         }
       }
-    })
+    });
 
     // the stored rateWindow is in milliseconds, but the slider is in seconds
     $scope.rateWindow = $scope.chart.rateWindow / 1000;
@@ -66,12 +68,12 @@ var QDR = (function(QDR) {
     };
     $scope.delChartsPage = function () {
       QDRChartService.delDashboard($scope.chart);
-    }
+    };
 
     $scope.showChartsPage = function () {
       cleanup();
       $uibModalInstance.close(true);
-      $location.path(QDR.pluginRoot + "/charts");
+      $location.path(QDR.pluginRoot + '/charts');
     };
 
     var cleanup = function () {
@@ -81,7 +83,7 @@ var QDR = (function(QDR) {
       }
       if (!$scope.isOnChartsPage())
         QDRChartService.unRegisterChart($scope.dialogChart);     // remove the chart
-    }
+    };
     $scope.okClick = function () {
       cleanup();
       $uibModalInstance.close(true);
@@ -89,7 +91,7 @@ var QDR = (function(QDR) {
 
     var initRateSlider = function () {
       if (document.getElementById('rateSlider')) {
-        $( "#rateSlider" ).slider({
+        $( '#rateSlider' ).slider({
           value: $scope.rateWindow,
           min: 1,
           max: 10,
@@ -103,14 +105,14 @@ var QDR = (function(QDR) {
           }
         });
       } else {
-        setTimeout(initRateSlider, 100)
+        setTimeout(initRateSlider, 100);
       }
-    }
+    };
     //initRateSlider();
 
     var initDurationSlider = function () {
       if (document.getElementById('durationSlider')) {
-        $( "#durationSlider" ).slider({
+        $( '#durationSlider' ).slider({
           value: $scope.dialogChart.visibleDuration,
           min: 0.25,
           max: 10,
@@ -123,22 +125,22 @@ var QDR = (function(QDR) {
           }
         });
       } else {
-        setTimeout(initDurationSlider, 100)
+        setTimeout(initDurationSlider, 100);
       }
-    }
+    };
     initDurationSlider();
 
     $scope.adding = function () {
-      return adding
-    }
+      return adding;
+    };
 
     $scope.isOnChartsPage = function () {
-      var chart = $scope.chart
+      let chart = $scope.chart;
       if (adding)
-        return QDRChartService.isAttrCharted(chart.nodeId(), chart.entity(), chart.name(), chart.attr(), chart.aggregate())
+        return QDRChartService.isAttrCharted(chart.nodeId(), chart.entity(), chart.name(), chart.attr(), chart.aggregate());
       else
-        return $scope.chart.dashboard
-    }
+        return $scope.chart.dashboard;
+    };
 
     // handle the Apply button click
     // update the dashboard chart's properties
@@ -150,41 +152,41 @@ var QDR = (function(QDR) {
       $scope.chart.title($scope.dialogChart.title());
       $scope.chart.visibleDuration = $scope.dialogChart.visibleDuration;
       QDRChartService.saveCharts();
-      if (typeof updateTick === "function")
+      if (typeof updateTick === 'function')
         updateTick();
-    }
+    };
 
     // add a new chart to the dashboard based on the current dialog settings
     $scope.copyToDashboard = function () {
-        var chart = $scope.dialogChart.copy();
-        // set the new chart's dashboard state
-        QDRChartService.addDashboard(chart);
-        // notify the chart controller that it needs to display a new chart
-        dashboard.addChart(chart);
-    }
+      let chart = $scope.dialogChart.copy();
+      // set the new chart's dashboard state
+      QDRChartService.addDashboard(chart);
+      // notify the chart controller that it needs to display a new chart
+      dashboard.addChart(chart);
+    };
 
     // update the chart on the popup dialog
     var updateDialogChart = function () {
       // draw the chart using the current data
       if (dialogSvgChart)
-          dialogSvgChart.tick($scope.svgDivId);
+        dialogSvgChart.tick($scope.svgDivId);
 
       // draw the chart again in 1 second
-      var updateRate = localStorage['updateRate'] ? localStorage['updateRate'] : 1000;
+      const updateRate = localStorage['updateRate'] ? localStorage['updateRate'] : 1000;
       if (updateTimer)
-      clearTimeout(updateTimer);
-        updateTimer = setTimeout(updateDialogChart, updateRate);
-    }
+        clearTimeout(updateTimer);
+      updateTimer = setTimeout(updateDialogChart, updateRate);
+    };
 
     var showChart = function () {
       // ensure the div for our chart is loaded in the dom
-      var div = angular.element("#" + $scope.svgDivId);
+      let div = angular.element('#' + $scope.svgDivId);
       if (!div.width()) {
         setTimeout(showChart, 100);
         return;
       }
-      dialogSvgChart = new QDRChartService.pfAreaChart($scope.dialogChart, $scope.svgDivId)
-/*
+      dialogSvgChart = new QDRChartService.pfAreaChart($scope.dialogChart, $scope.svgDivId);
+      /*
       $('input[name=areaColor]').val($scope.dialogChart.areaColor);
       $('input[name=areaColor]').on('input', function (e) {
         $scope.dialogChart.areaColor = $(this).val();
@@ -193,8 +195,8 @@ var QDR = (function(QDR) {
 */
       if (updateTimer)
         clearTimeout(updateTimer);
-          updateDialogChart();
-    }
+      updateDialogChart();
+    };
     showChart();
   });
   return QDR;

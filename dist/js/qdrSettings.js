@@ -16,6 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+'use strict';
+/* global angular */
 /**
  * @module QDR
  */
@@ -29,7 +31,7 @@ var QDR = (function(QDR) {
    * Controller that handles the QDR settings page
    */
 
-  QDR.module.controller("QDR.SettingsController", ['$scope', 'QDRService', 'QDRChartService', '$timeout', '$location', function($scope, QDRService, QDRChartService, $timeout, $location) {
+  QDR.module.controller('QDR.SettingsController', ['$scope', 'QDRService', 'QDRChartService', '$timeout', function($scope, QDRService, QDRChartService, $timeout) {
 
     $scope.connecting = false;
     $scope.connectionError = false;
@@ -52,9 +54,9 @@ var QDR = (function(QDR) {
 
     $scope.buttonText = function() {
       if (QDRService.management.connection.is_connected()) {
-        return "Disconnect";
+        return 'Disconnect';
       } else {
-        return "Connect";
+        return 'Connect';
       }
     };
 
@@ -62,8 +64,8 @@ var QDR = (function(QDR) {
     $scope.connect = function() {
       if (QDRService.management.connection.is_connected()) {
         $timeout( function () {
-          QDRService.disconnect()
-        })
+          QDRService.disconnect();
+        });
         return;
       }
 
@@ -72,40 +74,40 @@ var QDR = (function(QDR) {
         $scope.connecting = true;
         // timeout so connecting animation can display
         $timeout(function () {
-          doConnect()
-        })
+          doConnect();
+        });
       }
-    }
+    };
 
     var doConnect = function() {
-    QDR.log.info("doConnect called on connect page")
+      QDR.log.info('doConnect called on connect page');
       if (!$scope.formEntity.address)
-        $scope.formEntity.address = "localhost"
+        $scope.formEntity.address = 'localhost';
       if (!$scope.formEntity.port)
-        $scope.formEntity.port = 5673
+        $scope.formEntity.port = 5673;
 
-      var failed = function(e) {
+      var failed = function() {
         $timeout(function() {
           $scope.connecting = false;
-          $scope.connectionErrorText = "Unable to connect to " + $scope.formEntity.address + ":" + $scope.formEntity.port
-          $scope.connectionError = true
-        })
-      }
-      var options = {address: $scope.formEntity.address, port: $scope.formEntity.port, reconnect: true}
+          $scope.connectionErrorText = 'Unable to connect to ' + $scope.formEntity.address + ':' + $scope.formEntity.port;
+          $scope.connectionError = true;
+        });
+      };
+      let options = {address: $scope.formEntity.address, port: $scope.formEntity.port, reconnect: true};
       QDRService.connect(options)
-        .then( function (r) {
+        .then( function () {
           // register a callback for when the node list is available (needed for loading saved charts)
-          QDRService.management.topology.addUpdatedAction("initChartService", function() {
-            QDRService.management.topology.delUpdatedAction("initChartService")
+          QDRService.management.topology.addUpdatedAction('initChartService', function() {
+            QDRService.management.topology.delUpdatedAction('initChartService');
             QDRChartService.init(); // initialize charting service after we are connected
           });
           // get the list of nodes
           QDRService.management.topology.startUpdating(false);
           // will have redirected to last known page or /overview
         }, function (e) {
-          failed(e)
-        })
-    }
+          failed(e);
+        });
+    };
   }]);
 
 
@@ -116,15 +118,15 @@ var QDR = (function(QDR) {
       link: function(scope, elem, attr, ctrl) {
         // input type number allows + and - but we don't want them so filter them out
         elem.bind('keypress', function(event) {
-          var nkey = !event.charCode ? event.which : event.charCode;
-          var skey = String.fromCharCode(nkey);
-          var nono = "-+.,"
+          let nkey = !event.charCode ? event.which : event.charCode;
+          let skey = String.fromCharCode(nkey);
+          let nono = '-+.,';
           if (nono.indexOf(skey) >= 0) {
             event.preventDefault();
             return false;
           }
           // firefox doesn't filter out non-numeric input. it just sets the ctrl to invalid
-          if (/[\!\@\#\$\%^&*\(\)]/.test(skey) && event.shiftKey || // prevent shift numbers
+          if (/[!@#$%^&*()]/.test(skey) && event.shiftKey || // prevent shift numbers
             !( // prevent all but the following
               nkey <= 0 || // arrows
               nkey == 8 || // delete|backspace
@@ -136,21 +138,21 @@ var QDR = (function(QDR) {
             event.preventDefault();
             return false;
           }
-        })
-          // check the current value of input
+        });
+        // check the current value of input
         var _isPortInvalid = function(value) {
-          var port = value + ''
-          var isErrRange = false;
+          let port = value + '';
+          let isErrRange = false;
           // empty string is valid
           if (port.length !== 0) {
-            var n = ~~Number(port);
+            let n = ~~Number(port);
             if (n < 1 || n > 65535) {
               isErrRange = true;
             }
           }
-          ctrl.$setValidity('range', !isErrRange)
+          ctrl.$setValidity('range', !isErrRange);
           return isErrRange;
-        }
+        };
 
         //For DOM -> model validation
         ctrl.$parsers.unshift(function(value) {

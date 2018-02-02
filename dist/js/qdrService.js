@@ -16,41 +16,43 @@ Licensed to the Apache Software Foundation (ASF) under one
   specific language governing permissions and limitations
   under the License.
 */
+'use strict';
+/* global Promise */
 /**
  * @module QDR
  */
 var QDR = (function(QDR) {
 
   // The QDR service handles the connection to the router
-  QDR.module.factory("QDRService", ['$timeout', '$location', function($timeout, $location) {
-    var dm = require("dispatch-management")
-    var self = {
+  QDR.module.factory('QDRService', ['$timeout', '$location', function($timeout, $location) {
+    let dm = require('dispatch-management');
+    let self = {
       management: new dm.Management($location.protocol()),
       utilities: dm.Utilities,
 
       onReconnect: function () {
-        self.management.connection.on('disconnected', self.onDisconnect)
-        var org = localStorage[QDR.LAST_LOCATION] || "/overview"
+        self.management.connection.on('disconnected', self.onDisconnect);
+        let org = localStorage[QDR.LAST_LOCATION] || '/overview';
         $timeout ( function () {
-          $location.path(org)
-          $location.search('org', null)
-          $location.replace()
-        })
+          $location.path(org);
+          $location.search('org', null);
+          $location.replace();
+        });
       },
       onDisconnect: function () {
-        self.management.connection.on('connected', self.onReconnect)
+        self.management.connection.on('connected', self.onReconnect);
         $timeout( function () {
-          $location.path('/connect')
-          var curPath = $location.path()
-          var parts = curPath.split('/')
-          var org = parts[parts.length-1]
-          if (org && org.length > 0 && org !== "connect") {
-            $location.search('org', org)
+          $location.path('/connect');
+          let curPath = $location.path();
+          let parts = curPath.split('/');
+          let org = parts[parts.length-1];
+          if (org && org.length > 0 && org !== 'connect') {
+            $location.search('org', org);
           } else {
-            $location.search('org', null)
+            $location.search('org', null);
           }
-          $location.replace()
-        })
+          $location.replace();
+        });
       },
 
       connect: function (connectOptions) {
@@ -58,43 +60,43 @@ var QDR = (function(QDR) {
           self.management.connection.connect(connectOptions)
             .then( function (r) {
               // if we are ever disconnected, show the connect page and wait for a reconnect
-              self.management.connection.on('disconnected', self.onDisconnect)
+              self.management.connection.on('disconnected', self.onDisconnect);
 
               self.management.getSchema()
-                .then( function (schema) {
-                  QDR.log.info("got schema after connection")
-                  self.management.topology.setUpdateEntities([])
-                  QDR.log.info("requesting a topology")
+                .then( function () {
+                  QDR.log.info('got schema after connection');
+                  self.management.topology.setUpdateEntities([]);
+                  QDR.log.info('requesting a topology');
                   self.management.topology.get() // gets the list of routers
                     .then( function () {
-                      QDR.log.info("got initial topology")
-                      var curPath = $location.path()
-                      var parts = curPath.split('/')
-                      var org = parts[parts.length-1]
+                      QDR.log.info('got initial topology');
+                      let curPath = $location.path();
+                      let parts = curPath.split('/');
+                      let org = parts[parts.length-1];
                       if (org === '' || org === 'connect') {
-                        org = localStorage[QDR.LAST_LOCATION] || QDR.pluginRoot + "/overview"
+                        org = localStorage[QDR.LAST_LOCATION] || QDR.pluginRoot + '/overview';
                       }
                       $timeout ( function () {
-                        $location.path(org)
-                        $location.search('org', null)
-                        $location.replace()
-                      })
-                    })
-                })
-                resolve(r)
+                        $location.path(org);
+                        $location.search('org', null);
+                        $location.replace();
+                      });
+                    });
+                });
+              resolve(r);
             }, function (e) {
-              reject(e)
-            })
-          })
+              reject(e);
+            });
+        });
       },
       disconnect: function () {
         self.management.connection.disconnect();
-        delete self.management
-        self.management = new dm.Management($location.protocol())
+        delete self.management;
+        self.management = new dm.Management($location.protocol());
       }
 
 
-    }
+    };
 
     return self;
   }]);
@@ -114,19 +116,19 @@ var QDR = (function(QDR) {
 
 if (!String.prototype.startsWith) {
   String.prototype.startsWith = function (searchString, position) {
-    return this.substr(position || 0, searchString.length) === searchString
-  }
+    return this.substr(position || 0, searchString.length) === searchString;
+  };
 }
 
 if (!String.prototype.endsWith) {
   String.prototype.endsWith = function(searchString, position) {
-      var subjectString = this.toString();
-      if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-        position = subjectString.length;
-      }
-      position -= searchString.length;
-      var lastIndex = subjectString.lastIndexOf(searchString, position);
-      return lastIndex !== -1 && lastIndex === position;
+    let subjectString = this.toString();
+    if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+      position = subjectString.length;
+    }
+    position -= searchString.length;
+    let lastIndex = subjectString.lastIndexOf(searchString, position);
+    return lastIndex !== -1 && lastIndex === position;
   };
 }
 
@@ -134,15 +136,15 @@ if (!String.prototype.endsWith) {
 if (!Array.prototype.findIndex) {
   Object.defineProperty(Array.prototype, 'findIndex', {
     value: function(predicate) {
-     // 1. Let O be ? ToObject(this value).
+      // 1. Let O be ? ToObject(this value).
       if (this == null) {
         throw new TypeError('"this" is null or not defined');
       }
 
-      var o = Object(this);
+      let o = Object(this);
 
       // 2. Let len be ? ToLength(? Get(O, "length")).
-      var len = o.length >>> 0;
+      let len = o.length >>> 0;
 
       // 3. If IsCallable(predicate) is false, throw a TypeError exception.
       if (typeof predicate !== 'function') {
@@ -150,10 +152,10 @@ if (!Array.prototype.findIndex) {
       }
 
       // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
-      var thisArg = arguments[1];
+      let thisArg = arguments[1];
 
       // 5. Let k be 0.
-      var k = 0;
+      let k = 0;
 
       // 6. Repeat, while k < len
       while (k < len) {
@@ -161,7 +163,7 @@ if (!Array.prototype.findIndex) {
         // b. Let kValue be ? Get(O, Pk).
         // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
         // d. If testResult is true, return k.
-        var kValue = o[k];
+        let kValue = o[k];
         if (predicate.call(thisArg, kValue, k, o)) {
           return k;
         }
@@ -179,15 +181,15 @@ if (!Array.prototype.findIndex) {
 if (!Array.prototype.find) {
   Object.defineProperty(Array.prototype, 'find', {
     value: function(predicate) {
-     // 1. Let O be ? ToObject(this value).
+      // 1. Let O be ? ToObject(this value).
       if (this == null) {
         throw new TypeError('"this" is null or not defined');
       }
 
-      var o = Object(this);
+      let o = Object(this);
 
       // 2. Let len be ? ToLength(? Get(O, "length")).
-      var len = o.length >>> 0;
+      let len = o.length >>> 0;
 
       // 3. If IsCallable(predicate) is false, throw a TypeError exception.
       if (typeof predicate !== 'function') {
@@ -195,10 +197,10 @@ if (!Array.prototype.find) {
       }
 
       // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
-      var thisArg = arguments[1];
+      let thisArg = arguments[1];
 
       // 5. Let k be 0.
-      var k = 0;
+      let k = 0;
 
       // 6. Repeat, while k < len
       while (k < len) {
@@ -206,7 +208,7 @@ if (!Array.prototype.find) {
         // b. Let kValue be ? Get(O, Pk).
         // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
         // d. If testResult is true, return kValue.
-        var kValue = o[k];
+        let kValue = o[k];
         if (predicate.call(thisArg, kValue, k, o)) {
           return kValue;
         }

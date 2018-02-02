@@ -16,25 +16,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+'use strict';
+/* global angular d3 c3 */
+
 /**
  * @module QDR
  */
 var QDR = (function(QDR) {
 
   // The QDR chart service handles periodic gathering data for charts and displaying the charts
-  QDR.module.factory("QDRChartService", ['QDRService',
+  QDR.module.factory('QDRChartService', ['QDRService',
     function(QDRService) {
 
-      var instance = 0; // counter for chart instances
-      var bases = [];
+      let instance = 0; // counter for chart instances
+      let bases = [];
       var findBase = function(name, attr, request) {
-        for (var i = 0; i < bases.length; ++i) {
-          var base = bases[i];
+        for (let i = 0; i < bases.length; ++i) {
+          let base = bases[i];
           if (base.equals(name, attr, request))
             return base;
         }
         return null;
-      }
+      };
 
       function ChartBase(name, attr, request) {
         // the base chart attributes
@@ -47,18 +50,18 @@ var QDR = (function(QDR) {
           o.name = this.name;
           o.attr = this.attr;
           this.request.copyProps(o);
-        }
+        };
 
         this.equals = function(name, attr, request) {
           return (this.name == name && this.attr == attr && this.request.equals(request));
-        }
-      };
+        };
+      }
 
       // Object that represents a visible chart
       // There can be multiple of these per ChartBase (eg. one rate  and one value chart)
       function Chart(opts, request) { //name, attr, cinstance, request) {
 
-        var base = findBase(opts.name, opts.attr, request);
+        let base = findBase(opts.name, opts.attr, request);
         if (!base) {
           base = new ChartBase(opts.name, opts.attr, request);
           bases.push(base);
@@ -68,26 +71,26 @@ var QDR = (function(QDR) {
         this.dashboard = false; // is this chart on the dashboard page
         this.hdash = false; // is this chart on the hawtio dashboard page
         this.hreq = false; // has this hdash chart been requested
-        this.type = opts.type ? opts.type : "value"; // value or rate
+        this.type = opts.type ? opts.type : 'value'; // value or rate
         this.rateWindow = opts.rateWindow ? opts.rateWindow : 1000; // calculate the rate of change over this time interval. higher == smother graph
-        this.areaColor = "#32b9f3"; // the chart's area color when not an empty string
-        this.lineColor = "#058dc7"; // the chart's line color when not an empty string
+        this.areaColor = '#32b9f3'; // the chart's area color when not an empty string
+        this.lineColor = '#058dc7'; // the chart's line color when not an empty string
         this.visibleDuration = opts.visibleDuration ? opts.visibleDuration : opts.type === 'rate' ? 0.25 : 1; // number of minutes of data to show (<= base.duration)
         this.userTitle = null; // user title overrides title()
-        this.hideLabel = opts.hideLabel
-        this.hideLegend = opts.hideLegend
+        this.hideLabel = opts.hideLabel;
+        this.hideLegend = opts.hideLegend;
 
         // generate a unique id for this chart
         this.id = function() {
-            var name = this.name()
-            var nameparts = name.split('/');
-            if (nameparts.length == 2)
-              name = nameparts[1];
-            var key = QDRService.management.topology.nameFromId(this.request().nodeId) + this.request().entity + name + this.attr() + "_" + this.instance + "_" + (this.request().aggregate ? "1" : "0");
-            // remove all characters except letters,numbers, and _
-            return key.replace(/[^\w]/gi, '')
-          }
-          // copy the savable properties to an object
+          let name = this.name();
+          let nameparts = name.split('/');
+          if (nameparts.length == 2)
+            name = nameparts[1];
+          let key = QDRService.management.topology.nameFromId(this.request().nodeId) + this.request().entity + name + this.attr() + '_' + this.instance + '_' + (this.request().aggregate ? '1' : '0');
+          // remove all characters except letters,numbers, and _
+          return key.replace(/[^\w]/gi, '');
+        };
+        // copy the savable properties to an object
         this.copyProps = function(o) {
           o.type = this.type;
           o.rateWindow = this.rateWindow;
@@ -99,58 +102,58 @@ var QDR = (function(QDR) {
           o.hdash = this.hdash;
           o.instance = this.instance;
           this.base.copyProps(o);
-        }
+        };
         this.name = function(_) {
           if (!arguments.length) return this.base.name;
           this.base.name = _;
           return this;
-        }
+        };
         this.attr = function(_) {
           if (!arguments.length) return this.base.attr;
           this.base.attr = _;
           return this;
-        }
+        };
         this.nodeId = function(_) {
           if (!arguments.length) return this.base.request.nodeId;
           this.base.request.nodeId = _;
           return this;
-        }
+        };
         this.entity = function(_) {
           if (!arguments.length) return this.base.request.entity;
           this.base.request.entity = _;
           return this;
-        }
+        };
         this.aggregate = function(_) {
           if (!arguments.length) return this.base.request.aggregate;
           this.base.request.aggregate = _;
           return this;
-        }
+        };
         this.request = function(_) {
           if (!arguments.length) return this.base.request;
           this.base.request = _;
           return this;
-        }
+        };
         this.data = function() {
           return this.base.request.data(this.base.name, this.base.attr); // refernce to chart's data array
-        }
+        };
         this.interval = function(_) {
           if (!arguments.length) return this.base.request.interval;
           this.base.request.interval = _;
           return this;
-        }
+        };
         this.duration = function(_) {
           if (!arguments.length) return this.base.request.duration;
           this.base.request.duration = _;
           return this;
-        }
+        };
         this.router = function () {
-          return QDRService.management.topology.nameFromId(this.nodeId())
-        }
+          return QDRService.management.topology.nameFromId(this.nodeId());
+        };
         this.title = function(_) {
-          var name = this.request().aggregate ? 'Aggregate' : QDRService.management.topology.nameFromId(this.nodeId());
-          var computed = name +
-            " " + QDRService.utilities.humanify(this.attr()) +
-            " - " + this.name()
+          let name = this.request().aggregate ? 'Aggregate' : QDRService.management.topology.nameFromId(this.nodeId());
+          let computed = name +
+            ' ' + QDRService.utilities.humanify(this.attr()) +
+            ' - ' + this.name();
           if (!arguments.length) return this.userTitle || computed;
 
           // don't store computed title in userTitle
@@ -158,39 +161,39 @@ var QDR = (function(QDR) {
             _ = null;
           this.userTitle = _;
           return this;
-        }
-        this.title_short = function(_) {
+        };
+        this.title_short = function() {
           if (!arguments.length) return this.userTitle || this.name();
           return this;
-        }
+        };
         this.copy = function() {
-            var chart = self.registerChart({
-              nodeId: this.nodeId(),
-              entity: this.entity(),
-              name: this.name(),
-              attr: this.attr(),
-              interval: this.interval(),
-              forceCreate: true,
-              aggregate: this.aggregate(),
-              hdash: this.hdash
-            })
-            chart.type = this.type;
-            chart.areaColor = this.areaColor;
-            chart.lineColor = this.lineColor;
-            chart.rateWindow = this.rateWindow;
-            chart.visibleDuration = this.visibleDuration;
-            chart.userTitle = this.userTitle;
-            return chart;
-          }
-          // compare to a chart
+          let chart = self.registerChart({
+            nodeId: this.nodeId(),
+            entity: this.entity(),
+            name: this.name(),
+            attr: this.attr(),
+            interval: this.interval(),
+            forceCreate: true,
+            aggregate: this.aggregate(),
+            hdash: this.hdash
+          });
+          chart.type = this.type;
+          chart.areaColor = this.areaColor;
+          chart.lineColor = this.lineColor;
+          chart.rateWindow = this.rateWindow;
+          chart.visibleDuration = this.visibleDuration;
+          chart.userTitle = this.userTitle;
+          return chart;
+        };
+        // compare to a chart
         this.equals = function(c) {
           return (c.instance == this.instance &&
             c.base.equals(this.base.name, this.base.attr, this.base.request) &&
             c.type == this.type &&
             c.rateWindow == this.rateWindow &&
             c.areaColor == this.areaColor &&
-            c.lineColor == this.lineColor)
-        }
+            c.lineColor == this.lineColor);
+        };
       }
 
       // Object that represents the management request to fetch and store data for multiple charts
@@ -208,22 +211,22 @@ var QDR = (function(QDR) {
 
         // allow override of normal request's management call to get data
         this.override = opts.override; // call this instead of internal function to retreive data
-        this.overrideAttrs = opts.overrideAttrs //
+        this.overrideAttrs = opts.overrideAttrs; //
 
         this.data = function(name, attr) {
           if (this.datum[name] && this.datum[name][attr])
-            return this.datum[name][attr]
+            return this.datum[name][attr];
           return null;
-        }
+        };
         this.addAttrName = function(name, attr) {
           if (Object.keys(this.datum).indexOf(name) == -1) {
-            this.datum[name] = {}
+            this.datum[name] = {};
           }
           if (Object.keys(this.datum[name]).indexOf(attr) == -1) {
             this.datum[name][attr] = [];
           }
-        }
-        this.addAttrName(opts.name, opts.attr)
+        };
+        this.addAttrName(opts.name, opts.attr);
 
         this.copyProps = function(o) {
           o.nodeId = this.nodeId;
@@ -231,44 +234,44 @@ var QDR = (function(QDR) {
           o.interval = this.interval;
           o.aggregate = this.aggregate;
           o.duration = this.duration;
-        }
+        };
 
         this.removeAttr = function(name, attr) {
           if (this.datum[name]) {
             if (this.datum[name][attr]) {
-              delete this.datum[name][attr]
+              delete this.datum[name][attr];
             }
           }
           return this.attrs().length;
-        }
+        };
 
         this.equals = function(r, entity, aggregate) {
           if (arguments.length == 3) {
-            var o = {
+            let o = {
               nodeId: r,
               entity: entity,
               aggregate: aggregate
-            }
+            };
             r = o;
           }
-          return (this.nodeId === r.nodeId && this.entity === r.entity && this.aggregate == r.aggregate)
-        }
+          return (this.nodeId === r.nodeId && this.entity === r.entity && this.aggregate == r.aggregate);
+        };
         this.names = function() {
-          return Object.keys(this.datum)
-        }
+          return Object.keys(this.datum);
+        };
         this.attrs = function() {
-          var attrs = {}
+          let attrs = {};
           Object.keys(this.datum).forEach(function(name) {
             Object.keys(this.datum[name]).forEach(function(attr) {
               attrs[attr] = 1;
-            })
-          }, this)
+            });
+          }, this);
           return Object.keys(attrs);
-        }
-      };
+        };
+      }
 
       // Below here are the properties and methods available on QDRChartService
-      var self = {
+      let self = {
         charts: [], // list of charts to gather data for
         chartRequests: [], // the management request info (multiple charts can be driven off of a single request
 
@@ -276,20 +279,20 @@ var QDR = (function(QDR) {
           self.loadCharts();
           QDRService.management.connection.addDisconnectAction(function() {
             self.charts.forEach(function(chart) {
-              self.unRegisterChart(chart, true)
-            })
+              self.unRegisterChart(chart, true);
+            });
             QDRService.management.connection.addConnectAction(self.init);
-          })
+          });
         },
 
         findChartRequest: function(nodeId, entity, aggregate) {
-          var ret = null;
+          let ret = null;
           self.chartRequests.some(function(request) {
             if (request.equals(nodeId, entity, aggregate)) {
               ret = request;
               return true;
             }
-          })
+          });
           return ret;
         },
 
@@ -301,15 +304,15 @@ var QDR = (function(QDR) {
               chart.attr() == opts.attr &&
               chart.nodeId() == opts.nodeId &&
               chart.entity() == opts.entity &&
-              chart.hdash == opts.hdash)
+              chart.hdash == opts.hdash);
           });
         },
 
         delChartRequest: function(request) {
-          for (var i = 0; i < self.chartRequests.length; ++i) {
-            var r = self.chartRequests[i];
+          for (let i = 0; i < self.chartRequests.length; ++i) {
+            let r = self.chartRequests[i];
             if (request.equals(r)) {
-              QDR.log.debug("removed request: " + request.nodeId + " " + request.entity);
+              QDR.log.debug('removed request: ' + request.nodeId + ' ' + request.entity);
               self.chartRequests.splice(i, 1);
               self.stopCollecting(request);
               return;
@@ -318,9 +321,9 @@ var QDR = (function(QDR) {
         },
 
         delChart: function(chart, skipSave) {
-          var foundBases = 0;
-          for (var i = 0; i < self.charts.length; ++i) {
-            var c = self.charts[i];
+          let foundBases = 0;
+          for (let i = 0; i < self.charts.length; ++i) {
+            let c = self.charts[i];
             if (c.base === chart.base)
               ++foundBases;
             if (c.equals(chart)) {
@@ -330,20 +333,20 @@ var QDR = (function(QDR) {
             }
           }
           if (foundBases == 1) {
-            var baseIndex = bases.indexOf(chart.base)
+            let baseIndex = bases.indexOf(chart.base);
             bases.splice(baseIndex, 1);
           }
         },
 
         createChart: function (opts, request) {
-          return new Chart(opts, request)
+          return new Chart(opts, request);
         },
         createChartRequest: function (opts) {
-          var request = new ChartRequest(opts); //nodeId, entity, name, attr, interval, aggregate);
-          request.creationTimestamp = opts.now
+          let request = new ChartRequest(opts); //nodeId, entity, name, attr, interval, aggregate);
+          request.creationTimestamp = opts.now;
           self.chartRequests.push(request);
           self.startCollecting(request);
-          self.sendChartRequest(request, true)
+          self.sendChartRequest(request, true);
           return request;
         },
         destroyChartRequest: function (request) {
@@ -352,21 +355,21 @@ var QDR = (function(QDR) {
         },
 
         registerChart: function(opts) { //nodeId, entity, name, attr, interval, instance, forceCreate, aggregate, hdash) {
-          var request = self.findChartRequest(opts.nodeId, opts.entity, opts.aggregate);
+          let request = self.findChartRequest(opts.nodeId, opts.entity, opts.aggregate);
           if (request) {
             // add any new attr or name to the list
-            request.addAttrName(opts.name, opts.attr)
+            request.addAttrName(opts.name, opts.attr);
           } else {
             // the nodeId/entity did not already exist, so add a new request and chart
-            QDR.log.debug("added new request: " + opts.nodeId + " " + opts.entity);
-            var request = self.createChartRequest(opts);
+            QDR.log.debug('added new request: ' + opts.nodeId + ' ' + opts.entity);
+            request = self.createChartRequest(opts);
           }
-          var charts = self.findCharts(opts); //name, attr, nodeId, entity, hdash);
-          var chart;
+          let charts = self.findCharts(opts); //name, attr, nodeId, entity, hdash);
+          let chart;
           if (charts.length == 0 || opts.forceCreate) {
             if (!opts.use_instance && opts.instance)
               delete opts.instance;
-            chart = new Chart(opts, request) //opts.name, opts.attr, opts.instance, request);
+            chart = new Chart(opts, request); //opts.name, opts.attr, opts.instance, request);
             self.charts.push(chart);
           } else {
             chart = charts[0];
@@ -388,21 +391,21 @@ var QDR = (function(QDR) {
           //    return;
           //}
 
-          for (var i = 0; i < self.charts.length; ++i) {
-            var c = self.charts[i];
+          for (let i = 0; i < self.charts.length; ++i) {
+            let c = self.charts[i];
             if (chart.equals(c)) {
-              var request = chart.request();
+              let request = chart.request();
               self.delChart(chart, skipSave);
               if (request) {
                 // see if any other charts use this attr
-                for (var i = 0; i < self.charts.length; ++i) {
-                  var c = self.charts[i];
-                  if (c.attr() == chart.attr() && c.request().equals(chart.request()))
+                for (let j = 0; j < self.charts.length; ++j) {
+                  let ch = self.charts[j];
+                  if (ch.attr() == chart.attr() && ch.request().equals(chart.request()))
                     return;
                 }
                 // no other charts use this attr, so remove it
                 if (request.removeAttr(chart.name(), chart.attr()) == 0) {
-                  self.destroyChartRequest(request)
+                  self.destroyChartRequest(request);
                 }
               }
             }
@@ -421,60 +424,58 @@ var QDR = (function(QDR) {
         startCollecting: function(request) {
           request.setTimeoutHandle = setInterval(self.sendChartRequest, request.interval, request);
         },
-        shouldRequest: function(request) {
+        shouldRequest: function() {
           // see if any of the charts associated with this request have either dialog, dashboard, or hreq
           return self.charts.some(function(chart) {
             return (chart.dashboard || chart.hreq) || (!chart.dashboard && !chart.hdash);
           });
         },
         // send the request
-        sendChartRequest: function(request, once) {
-          //if (!once)
-          //  request.setTimeoutHandle = setTimeout(self.sendChartRequest, request.interval, request)
+        sendChartRequest: function(request) {
           if (request.busy)
-            return
+            return;
           if (self.charts.length > 0 && !self.shouldRequest(request)) {
             return;
           }
           // ensure the response has the name field so we can associate the response values with the correct chart
-          var attrs = request.attrs();
-          if (attrs.indexOf("name") == -1)
-            attrs.push("name");
+          let attrs = request.attrs();
+          if (attrs.indexOf('name') == -1)
+            attrs.push('name');
 
           // this is called when the response is received
           var saveResponse = function(nodeId, entity, response) {
-            request.busy = false
+            request.busy = false;
             if (!response || !response.attributeNames)
               return;
             //QDR.log.debug("got chart results for " + nodeId + " " + entity);
             // records is an array that has data for all names
-            var records = response.results;
+            let records = response.results;
             if (!records)
               return;
 
-            var now = new Date();
-            var cutOff = new Date(now.getTime() - request.duration * 60 * 1000);
+            let now = new Date();
+            let cutOff = new Date(now.getTime() - request.duration * 60 * 1000);
             // index of the "name" attr in the response
-            var nameIndex = response.attributeNames.indexOf("name");
+            let nameIndex = response.attributeNames.indexOf('name');
             if (nameIndex < 0)
               return;
 
-            var names = request.names();
+            let names = request.names();
             // for each record returned, find the name/attr for this request and save the data with this timestamp
-            for (var i = 0; i < records.length; ++i) {
-              var name = records[i][nameIndex];
+            for (let i = 0; i < records.length; ++i) {
+              let name = records[i][nameIndex];
               // if we want to store the values for some attrs for this name
               if (names.indexOf(name) > -1) {
                 attrs.forEach(function(attr) {
-                  var attrIndex = response.attributeNames.indexOf(attr)
+                  let attrIndex = response.attributeNames.indexOf(attr);
                   if (records[i][attrIndex] !== undefined) {
-                    var data = request.data(name, attr) // get a reference to the data array
+                    let data = request.data(name, attr); // get a reference to the data array
                     if (data) {
 
                       if (request.aggregate) {
-                        data.push([now, response.aggregates[i][attrIndex].sum, response.aggregates[i][attrIndex].detail])
+                        data.push([now, response.aggregates[i][attrIndex].sum, response.aggregates[i][attrIndex].detail]);
                       } else {
-                        data.push([now, records[i][attrIndex]])
+                        data.push([now, records[i][attrIndex]]);
                       }
                       // expire the old data
                       while (data[0][0] < cutOff) {
@@ -482,18 +483,18 @@ var QDR = (function(QDR) {
                       }
                     }
                   }
-                })
+                });
               }
             }
-          }
-          request.busy = true
+          };
+          request.busy = true;
           // check for override of request
           if (request.override) {
-            request.override(request, saveResponse)
+            request.override(request, saveResponse);
           } else {
             // send the appropriate request
             if (request.aggregate) {
-              var nodeList = QDRService.management.topology.nodeIdList()
+              let nodeList = QDRService.management.topology.nodeIdList();
               QDRService.management.topology.getMultipleNodeInfo(nodeList, request.entity, attrs, saveResponse, request.nodeId);
             } else {
               QDRService.management.topology.fetchEntity(request.nodeId, request.entity, attrs, saveResponse);
@@ -503,21 +504,21 @@ var QDR = (function(QDR) {
 
         numCharts: function() {
           return self.charts.filter(function(chart) {
-            return chart.dashboard
+            return chart.dashboard;
           }).length;
           //return self.charts.length;
         },
 
         isAttrCharted: function(nodeId, entity, name, attr, aggregate) {
-          var charts = self.findCharts({
-              name: name,
-              attr: attr,
-              nodeId: nodeId,
-              entity: entity
-            })
-            // if any of the matching charts are on the dashboard page, return true
+          let charts = self.findCharts({
+            name: name,
+            attr: attr,
+            nodeId: nodeId,
+            entity: entity
+          });
+          // if any of the matching charts are on the dashboard page, return true
           return charts.some(function(chart) {
-            return (chart.dashboard && (aggregate ? chart.aggregate() : !chart.aggregate()))
+            return (chart.dashboard && (aggregate ? chart.aggregate() : !chart.aggregate()));
           });
         },
 
@@ -539,24 +540,23 @@ var QDR = (function(QDR) {
         },
         // save the charts to local storage
         saveCharts: function() {
-          var charts = [];
-          var minCharts = [];
+          let minCharts = [];
 
           self.charts.forEach(function(chart) {
-            var minChart = {};
+            let minChart = {};
             // don't save chart unless it is on the dashboard
             if (chart.dashboard || chart.hdash) {
               chart.copyProps(minChart);
               minCharts.push(minChart);
             }
-          })
-          localStorage["QDRCharts"] = angular.toJson(minCharts);
+          });
+          localStorage['QDRCharts'] = angular.toJson(minCharts);
         },
         loadCharts: function() {
-          var charts = angular.fromJson(localStorage["QDRCharts"]);
+          let charts = angular.fromJson(localStorage['QDRCharts']);
           if (charts) {
             // get array of known ids
-            var nodeList = QDRService.management.topology.nodeIdList()
+            let nodeList = QDRService.management.topology.nodeIdList();
             charts.forEach(function(chart) {
               // if this chart is not in the current list of nodes, skip
               if (nodeList.indexOf(chart.nodeId) >= 0) {
@@ -579,20 +579,20 @@ var QDR = (function(QDR) {
                   chart.dashboard = false;
                 chart.forceCreate = true;
                 chart.use_instance = true;
-                var newChart = self.registerChart(chart); //chart.nodeId, chart.entity, chart.name, chart.attr, chart.interval, true, chart.aggregate);
+                let newChart = self.registerChart(chart); //chart.nodeId, chart.entity, chart.name, chart.attr, chart.interval, true, chart.aggregate);
                 newChart.dashboard = chart.dashboard;
                 newChart.hdash = chart.hdash;
                 newChart.hreq = false;
                 newChart.type = chart.type;
                 newChart.rateWindow = chart.rateWindow;
-                newChart.areaColor = chart.areaColor ? chart.areaColor : "#32b9f3";
-                newChart.lineColor = chart.lineColor ? chart.lineColor : "#058dc7";
+                newChart.areaColor = chart.areaColor ? chart.areaColor : '#32b9f3';
+                newChart.lineColor = chart.lineColor ? chart.lineColor : '#058dc7';
                 newChart.duration(chart.duration);
                 newChart.visibleDuration = chart.visibleDuration ? chart.visibleDuration : newChart.type === 'rate' ? 0.25 : 1;
                 if (chart.userTitle)
                   newChart.title(chart.userTitle);
               }
-            })
+            });
           }
         },
 
@@ -608,19 +608,19 @@ var QDR = (function(QDR) {
           this.stacked = chart.request().aggregate;
 
           // the id of the html element that is bound to the chart. The svg will be a child of this
-          this.htmlId = chartId
+          this.htmlId = chartId;
 
           // an array of 20 colors
           this.colors = d3.scale.category10().range();
 
           if (!defer)
-            this.generate()
+            this.generate();
         },
 
         // aggregate chart is based on pfAreaChart
         pfAggChart: function (chart, chartId, defer) {
           // inherit pfChart's properties, but force a defer
-          self.pfAreaChart.call(this, chart, chartId, true)
+          self.pfAreaChart.call(this, chart, chartId, true);
 
           // the request is for aggregate data, but the chart is for the sum and not the detail
           // Explanation: When the chart.request is aggregate, each data point is composed of 3 parts:
@@ -629,15 +629,15 @@ var QDR = (function(QDR) {
           //  3. an object with each router's name and value for this data point
           // Normally, an aggregate chart shows lines for each of the routers and ignores the sum
           // For this chart, we want to chart the sum (the 2nd value), so we set stacked to false
-          this.stacked = false
+          this.stacked = false;
 
           // let chart legends and tooltips show 'Total' instead of a router name
-          this.aggregate = true
+          this.aggregate = true;
 
           if (!defer)
-            this.generate()
+            this.generate();
         }
-      }
+      };
       // allow pfAggChart to inherit prototyped methods
       self.pfAggChart.prototype = Object.create(self.pfAreaChart.prototype);
       // except for the constructor
@@ -645,112 +645,112 @@ var QDR = (function(QDR) {
 
       // create the svg and bind it to the given div.id
       self.pfAreaChart.prototype.generate = function () {
-        var chart = this.chart  // for access during chart callbacks
-        var self = this
+        let chart = this.chart;  // for access during chart callbacks
+        let self = this;
 
         // list of router names. used to get the color index
-        var nameList = QDRService.management.topology.nodeNameList();
+        let nameList = QDRService.management.topology.nodeNameList();
 
-        var c3ChartDefaults = $().c3ChartDefaults();
-        var singleAreaChartConfig = c3ChartDefaults.getDefaultSingleAreaConfig();
+        let c3ChartDefaults = $().c3ChartDefaults();
+        let singleAreaChartConfig = c3ChartDefaults.getDefaultSingleAreaConfig();
         singleAreaChartConfig.bindto = '#' + this.htmlId;
         singleAreaChartConfig.data = {
-            x: 'x',           // x-axis is named x
-            columns: [[]],
-            type: 'area-spline'
-        }
+          x: 'x',           // x-axis is named x
+          columns: [[]],
+          type: 'area-spline'
+        };
         singleAreaChartConfig.axis = {
           x: {
             type: 'timeseries',
             tick: {
               format: (function (d) {
-                var data = this.singleAreaChart.data.shown()
-                var first = data[0]['values'][0].x
+                let data = this.singleAreaChart.data.shown();
+                let first = data[0]['values'][0].x;
 
                 if (d - first == 0) {
-                  return d3.timeFormat("%I:%M:%S")(d)
+                  return d3.timeFormat('%I:%M:%S')(d);
                 }
-                return d3.timeFormat("%M:%S")(d)
+                return d3.timeFormat('%M:%S')(d);
               }).bind(this),
               culling: {max: 4}
             }
           },
           y: {
             tick: {
-              format: function (d) { return d<1 ? d3.format(".2f")(d) : d3.format(".2s")(d) },
+              format: function (d) { return d<1 ? d3.format('.2f')(d) : d3.format('.2s')(d); },
               count: 5
             }
           }
-        }
+        };
 
         if (!chart.hideLabel) {
-            singleAreaChartConfig.axis.x.label = {
-              text: chart.name(),
-              position: 'outer-right'
-            }
+          singleAreaChartConfig.axis.x.label = {
+            text: chart.name(),
+            position: 'outer-right'
+          };
 
         }
         singleAreaChartConfig.transition = {
           duration: 0
-        }
+        };
 
         singleAreaChartConfig.area = {
           zerobased: false
-        }
+        };
 
         singleAreaChartConfig.tooltip = {
-          contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
-            var d3f = ","
+          contents: function (d) {
+            let d3f = ',';
             if (chart.type === 'rate')
-              d3f = ",.2f"
-            var zPre = function (i) {
+              d3f = ',.2f';
+            let zPre = function (i) {
               if (i < 10) {
-                i = "0" + i;
+                i = '0' + i;
               }
               return i;
+            };
+            let h = zPre(d[0].x.getHours());
+            let m = zPre(d[0].x.getMinutes());
+            let s = zPre(d[0].x.getSeconds());
+            let table = '<table class=\'dispatch-c3-tooltip\'>  <tr><th colspan=\'2\' class=\'text-center\'><strong>'+h+':'+m+':'+s+'</strong></th></tr> <tbody>';
+            for (let i=0; i<d.length; i++) {
+              let colorIndex = nameList.indexOf(d[i].id) % 10;
+              let span = '<span class=\'chart-tip-legend\' style=\'background-color: '+self.colors[colorIndex]+';\'> </span>' + d[i].id;
+              table += ('<tr><td>'+span+'<td>'+d3.format(d3f)(d[i].value)+'</td></tr>');
             }
-            var h = zPre(d[0].x.getHours())
-            var m = zPre(d[0].x.getMinutes())
-            var s = zPre(d[0].x.getSeconds())
-            var table = "<table class='dispatch-c3-tooltip'>  <tr><th colspan='2' class='text-center'><strong>"+h+':'+m+':'+s+"</strong></th></tr> <tbody>"
-            for (var i=0; i<d.length; i++) {
-              var colorIndex = nameList.indexOf(d[i].id) % 10
-              var span = "<span class='chart-tip-legend' style='background-color: "+self.colors[colorIndex]+";'> </span>" + d[i].id
-              table += ("<tr><td>"+span+"<td>"+d3.format(d3f)(d[i].value)+"</td></tr>")
-            }
-            table += "</tbody></table>"
-            return table
+            table += '</tbody></table>';
+            return table;
           }
-        }
+        };
 
         singleAreaChartConfig.title = {
           text: QDRService.utilities.humanify(this.chart.attr())
-        }
+        };
 
-        singleAreaChartConfig.data.colors = {}
+        singleAreaChartConfig.data.colors = {};
         nameList.forEach( (function (r, i) {
-          singleAreaChartConfig.data.colors[r] = this.colors[i % 10]
-        }).bind(this))
+          singleAreaChartConfig.data.colors[r] = this.colors[i % 10];
+        }).bind(this));
 
         singleAreaChartConfig.data.color = (function (color, d) {
-          var i = nameList.indexOf(d)
-          return i >= 0 ? this.colors[i % 10] : color
-        }).bind(this)
+          let i = nameList.indexOf(d);
+          return i >= 0 ? this.colors[i % 10] : color;
+        }).bind(this);
 
         if (!chart.hideLegend) {
           singleAreaChartConfig.legend = {
             show: true,
-          }
+          };
         }
 
         if (this.stacked) {
           // create a stacked area chart
-          singleAreaChartConfig.data.groups = [QDRService.management.topology.nodeNameList()]
-          singleAreaChartConfig.data.order = function (t1, t2) { return t1.id < t2.id }
+          singleAreaChartConfig.data.groups = [QDRService.management.topology.nodeNameList()];
+          singleAreaChartConfig.data.order = function (t1, t2) { return t1.id < t2.id; };
         }
 
         this.singleAreaChart = c3.generate(singleAreaChartConfig);
-      }
+      };
 
       // filter/modify the chart.data into data points for the svg
       /* the collected data looks like:
@@ -772,58 +772,58 @@ var QDR = (function(QDR) {
          for rate charts, all the values returned are the change per second between adjacent values
       */
       self.pfAreaChart.prototype.chartData = function() {
-        var data = this.chart.data();
-        var nodeList = QDRService.management.topology.nodeNameList();
+        let data = this.chart.data();
+        let nodeList = QDRService.management.topology.nodeNameList();
 
         // oldest data point that should be visible
-        var now = new Date();
-        var visibleDate = new Date(now.getTime() - this.chart.visibleDuration * 60 * 1000);
+        let now = new Date();
+        let visibleDate = new Date(now.getTime() - this.chart.visibleDuration * 60 * 1000);
 
-        var accessorSingle = function (d, d1, elapsed) {
-          return this.chart.type === 'rate' ? (d1[1] - d[1]) / elapsed : d[1]
-        }
-        var accessorStacked = function (d, d1, elapsed, i) {
-          return this.chart.type === 'rate' ? (d1[2][i].val - d[2][i].val) / elapsed : d[2][i].val
-        }
-        var accessor = this.stacked ? accessorStacked : accessorSingle
+        let accessorSingle = function (d, d1, elapsed) {
+          return this.chart.type === 'rate' ? (d1[1] - d[1]) / elapsed : d[1];
+        };
+        let accessorStacked = function (d, d1, elapsed, i) {
+          return this.chart.type === 'rate' ? (d1[2][i].val - d[2][i].val) / elapsed : d[2][i].val;
+        };
+        let accessor = this.stacked ? accessorStacked : accessorSingle;
 
-        var dx = ['x']
-        var dlines = []
+        let dx = ['x'];
+        let dlines = [];
         if (this.stacked) {
           // for stacked, there is a line per router
           nodeList.forEach( function (node) {
-            dlines.push([node])
-          })
+            dlines.push([node]);
+          });
         } else {
           // for non-stacked, there is only one line
-          dlines.push([this.aggregate ? 'Total' : this.chart.router()])
+          dlines.push([this.aggregate ? 'Total' : this.chart.router()]);
         }
-        for (var i=0; i<data.length; i++) {
-          var d = data[i], elapsed = 1, d1
+        for (let i=0; i<data.length; i++) {
+          let d = data[i], elapsed = 1, d1;
           if (d[0] >= visibleDate) {
             if (this.chart.type === 'rate' && i < data.length-1) {
-              d1 = data[i+1]
+              d1 = data[i+1];
               elapsed = Math.max((d1[0] - d[0]) / 1000, 0.001); // number of seconds that elapsed
             }
             // don't push the last data point for a rate chart
             if (this.chart.type !== 'rate' || i < data.length-1) {
-              dx.push(d[0])
+              dx.push(d[0]);
               if (this.stacked) {
-                for (var nodeIndex=0; nodeIndex<nodeList.length; nodeIndex++) {
-                  dlines[nodeIndex].push(accessor.call(this, d, d1, elapsed, nodeIndex))
+                for (let nodeIndex=0; nodeIndex<nodeList.length; nodeIndex++) {
+                  dlines[nodeIndex].push(accessor.call(this, d, d1, elapsed, nodeIndex));
                 }
               } else {
-                dlines[0].push(accessor.call(this, d, d1, elapsed))
+                dlines[0].push(accessor.call(this, d, d1, elapsed));
               }
             }
           }
         }
-        var columns = [dx]
+        let columns = [dx];
         dlines.forEach( function (line) {
-          columns.push(line)
-        })
-        return columns
-      }
+          columns.push(line);
+        });
+        return columns;
+      };
 
       // get the data for the chart and update it
       self.pfAreaChart.prototype.tick = function() {
@@ -834,18 +834,18 @@ var QDR = (function(QDR) {
 
         // update the chart title
         // since there is no c3 api to get or set the chart title, we change the title directly using d3
-        var rate = ''
+        let rate = '';
         if (this.chart.type === 'rate')
-          rate = ' per second'
-        d3.select("#"+this.htmlId+" svg text.c3-title").text(QDRService.utilities.humanify(this.chart.attr()) + rate);
+          rate = ' per second';
+        d3.select('#'+this.htmlId+' svg text.c3-title').text(QDRService.utilities.humanify(this.chart.attr()) + rate);
 
-        var d = this.chartData()
+        let d = this.chartData();
         // load the new data
         // using the c3.flow api causes the x-axis labels to jump around
         this.singleAreaChart.load({
           columns: d
-        })
-      }
+        });
+      };
 
       return self;
     }

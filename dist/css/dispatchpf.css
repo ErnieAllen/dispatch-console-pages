@@ -323,3 +323,9 @@ circle.c3-circle._expanded_ {
 #main.container-fluid {
   position: relative;
 }
+
+.chord-diagram:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f021";
+}

@@ -1,6 +1,6 @@
 {
   "name": "dispatch-console-pages",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "HTML, JS, CSS, font files for Qpid dispatch console",
   "main": "index.js",
   "scripts": {

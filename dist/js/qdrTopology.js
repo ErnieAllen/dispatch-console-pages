@@ -47,7 +47,6 @@ var QDR = (function(QDR) {
     };
     $scope.form = 'router';
     $scope.$on('showEntityForm', function(event, args) {
-      console.log('showEntityForm ' + args.entity);
       let attributes = args.attributes;
       let entityTypes = QDRService.management.schema().entityTypes[args.entity].attributes;
       attributes.forEach(function(attr) {
@@ -57,14 +56,17 @@ var QDR = (function(QDR) {
         if (entityTypes[attr.attributeName] && entityTypes[attr.attributeName].description) {
           attr.description = entityTypes[attr.attributeName].description;
         }
-        //QDR.log.debug("attr.description " + attr.description)
       });
       $scope.attributes = attributes;
       $scope.form = args.entity;
+      $timeout( function () {
+
+      });
     });
     $scope.infoStyle = function () {
+      console.log('setting form height to ' + ($scope.attributes.length * 30 + 46) + 'px');
       return {
-        height: ($scope.attributes.length * 30 + 46) + 'px'
+        height: (Math.max($scope.attributes.length, 15) * 30 + 46) + 'px'
       };
     };
   });
@@ -838,17 +840,14 @@ var QDR = (function(QDR) {
           return;
         let nodeList = QDRService.management.topology.nodeIdList();
         if (nodeList.indexOf(key) > -1) {
-          QDRService.management.topology.ensureEntities(key, [
+          QDRService.management.topology.fetchEntities(key, [
             {entity: entity},
-            {entity: 'listener', attrs: ['role', 'port']}], function () {
-            let nodeInfo = QDRService.management.topology.nodeInfo();
-            let onode = nodeInfo[key];
+            {entity: 'listener', attrs: ['role', 'port']}], function (results) {
+            let onode = results[key];
             if (!onode[entity]) {
               console.log('requested ' + entity + ' but didn\'t get it');
-              console.dump(nodeInfo);
               return;
             }
-
             let nodeResults = onode[entity].results[resultIndex];
             let nodeAttributes = onode[entity].attributeNames;
             let attributes = nodeResults.map(function(row, i) {

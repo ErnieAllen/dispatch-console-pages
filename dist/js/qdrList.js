@@ -295,7 +295,7 @@ var QDR = (function(QDR) {
       // the data for the selected entity is available, populate the tree on the left
       var updateTreeChildren = function (entity, tableRows, expand) {
         let tree = $('#entityTree').fancytree('getTree'), node, newNode;
-        if (tree) {
+        if (tree && tree.getNodeByKey) {
           node = tree.getNodeByKey(entity);
         }
         if (!tree || !node) {
@@ -363,6 +363,10 @@ var QDR = (function(QDR) {
       // the alternative is to let the tree and grid determine the size of the page and have
       // the scroll bar on the window
         let viewport = $('#list-controller .pane-viewport');
+        console.log('resizer called');
+        console.log('window.innerHeight ' + window.innerHeight);
+        console.log('offset.top ' + viewport.offset().top);
+        console.log('resizer called setting grid veiwport height to ' + (window.innerHeight - viewport.offset().top));
         viewport.height( window.innerHeight - viewport.offset().top);
         // don't allow HTML in the tree titles
         $('.fancytree-title').each( function () {
@@ -463,7 +467,7 @@ var QDR = (function(QDR) {
       // called from html ng-style="getTableHeight()"
       $scope.getTableHeight = function () {
         return {
-          height: ($scope.detailFields.length * 30 + 46) + 'px'
+          height: (Math.max($scope.detailFields.length, 15) * 30 + 46) + 'px'
         };
       };
 

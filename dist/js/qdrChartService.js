@@ -828,7 +828,7 @@ var QDR = (function(QDR) {
       // get the data for the chart and update it
       self.pfAreaChart.prototype.tick = function() {
         // can't draw charts that don't have data yet
-        if (this.chart.data().length == 0 || !this.singleAreaChart) {
+        if (!this.chart.data() || this.chart.data().length == 0 || !this.singleAreaChart) {
           return;
         }
 

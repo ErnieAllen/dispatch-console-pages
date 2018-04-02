@@ -241,7 +241,6 @@ var QDR = (function(QDR) {
             $scope.selectedEntity = selectedNode.parent.key;
             $scope.selectedRecordName = $scope.selectedEntity;
             updateDetails(fromSchema($scope.selectedEntity));
-
           }
         });
       };
@@ -504,6 +503,7 @@ var QDR = (function(QDR) {
             }
 
             d3.selectAll('.ui-effects-placeholder').style('height', '0px');
+            resizer();
 
             // once all expanded tree nodes have been update, schedule another update
             updateIntervalHandle = setTimeout(updateExpandedEntities, updateInterval);

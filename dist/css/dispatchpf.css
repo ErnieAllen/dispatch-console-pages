@@ -329,3 +329,9 @@ circle.c3-circle._expanded_ {
   font-family: FontAwesome;
   content: "\f021";
 }
+
+.code-branch:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f126";
+}

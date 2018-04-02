@@ -211,7 +211,7 @@ var QDR = (function(QDR) {
 
         // allow override of normal request's management call to get data
         this.override = opts.override; // call this instead of internal function to retreive data
-        this.overrideAttrs = opts.overrideAttrs; //
+        this.overrideAttrs = opts.overrideAttrs;
 
         this.data = function(name, attr) {
           if (this.datum[name] && this.datum[name][attr])

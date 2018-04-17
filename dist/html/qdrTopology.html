@@ -1,5 +1,5 @@
 <!--
-Licensed to the Apache Software Foundation (ASF) under one
+Licensed t  o the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
 regarding copyright ownership.  The ASF licenses this file
@@ -16,7 +16,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
+<style>
+  #popover-div {
+    position: absolute;
+    z-index: 200;
+    border-radius: 4px;
+    background-color: black;
+    color: white;
+    opacity: .95;
+    padding: 12px;
+    font-size: 14px;
+    display: none;
+  }
+
+  table.popupTable td {
+    padding-right: 5px;
+    font-size: 10px;
+  }
+
+</style>
 <div class="qdrTopology row-fluid" ng-controller="QDR.TopologyController">
+    <div id="popover-div" ng-bind-html="trustedpopoverContent"></div>
     <div class="qdr-topology pane left" ng-controller="QDR.TopologyFormController">
         <div id="topologyForm" ng-class="{selected : isSelected()}">
             <div ng-if="form == 'router'">

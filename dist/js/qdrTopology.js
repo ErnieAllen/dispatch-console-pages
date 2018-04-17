@@ -64,7 +64,6 @@ var QDR = (function(QDR) {
       });
     });
     $scope.infoStyle = function () {
-      console.log('setting form height to ' + ($scope.attributes.length * 30 + 46) + 'px');
       return {
         height: (Math.max($scope.attributes.length, 15) * 30 + 46) + 'px'
       };
@@ -1138,9 +1137,7 @@ var QDR = (function(QDR) {
               sel = '-highlighted';
             return d.right ? 'url(' + urlPrefix + '#end-arrow' + sel + ')' : '';
           });
-
-
-        // add new links. if links[] is longer than the existing paths, add a new path for each new element
+        // add new links. if a link with a new uid is found in the data, add a new path
         path.enter().append('svg:path')
           .attr('class', 'link')
           .attr('marker-start', function(d) {
@@ -1155,7 +1152,6 @@ var QDR = (function(QDR) {
             return d.cls == 'small';
           })
           .on('mouseover', function(d) { // mouse over a path
-            QDR.log.info('mouseover a path');
             let resultIndex = 0; // the connection to use
             let left = d.left ? d.target : d.source;
             // right is the node that the arrow points to, left is the other node
@@ -1187,8 +1183,19 @@ var QDR = (function(QDR) {
             selected_link = mousedown_link;
             restart();
           })
+          .on('mousemove', function (d) {
+            let top = $('#topology').offset().top - 5;
+            $timeout(function () {
+              $scope.trustedpopoverContent = $sce.trustAsHtml(connectionPopupHTML(d));
+            });
+            d3.select('#popover-div')
+              .style('display', 'block')
+              .style('left', (d3.event.pageX+5)+'px')
+              .style('top', (d3.event.pageY-top)+'px');
+          })
           .on('mouseout', function() { // mouse out of a path
-            //QDR.log.debug("showing connections form");
+            d3.select('#popover-div')
+              .style('display', 'none');
             selected_link = null;
             restart();
           })
@@ -2028,6 +2035,64 @@ var QDR = (function(QDR) {
         QDR.redirectWhenConnected($location, 'topology');
         return;
       }
+
+      let connectionPopupHTML = function (d) {
+        let left = d.left ? d.source : d.target;
+        // left is the connection with dir 'in'
+        let right = d.left ? d.target : d.source;
+        let onode = QDRService.management.topology.nodeInfo()[left.key];
+        let connSecurity = function (conn) {
+          if (!conn.isEncrypted)
+            return 'no-security';
+          if (conn.sasl === 'GSSAPI')
+            return 'Kerberos';
+          return conn.sslProto + '(' + conn.sslCipher + ')';
+        };
+        let connAuth = function (conn) {
+          if (!conn.isAuthenticated)
+            return 'no-auth';
+          let sasl = conn.sasl;
+          if (sasl === 'GSSAPI')
+            sasl = 'Kerberos';
+          else if (sasl === 'EXTERNAL')
+            sasl = 'x.509';
+          else if (sasl === 'ANONYMOUS')
+            return 'anonymous-user';
+          if (!conn.user)
+            return sasl;
+          return conn.user + '(' + sasl + ')';
+        };
+        let connTenant = function (conn) {
+          if (!conn.tenant) {
+            return '';
+          }
+          if (conn.tenant.length > 1)
+            return conn.tenant.replace(/\/$/, '');
+        };
+        // loop through all the connections for left, and find the one for right
+        let rightIndex = onode['connection'].results.findIndex( function (conn) {
+          return QDRService.utilities.valFor(onode['connection'].attributeNames, conn, 'container') === right.routerId;
+        });
+        if (rightIndex < 0) {
+          // we have a connection to a client/service
+          rightIndex = +left.connectionId;
+        }
+        if (isNaN(rightIndex)) {
+          // we have a connection to a console
+          rightIndex = +right.connectionId;
+        }
+        let HTML = '';
+        if (rightIndex >= 0) {
+          let conn = onode['connection'].results[rightIndex];
+          conn = QDRService.utilities.flatten(onode['connection'].attributeNames, conn);
+          HTML += '<table class="popupTable">';
+          HTML += ('<tr><td>Security</td><td>' + connSecurity(conn) + '</td></tr>');
+          HTML += ('<tr><td>Authentication</td><td>' + connAuth(conn) + '</td></tr>');
+          HTML += ('<tr><td>Tenant</td><td>' + connTenant(conn) + '</td></tr>');
+          HTML += '</table>';
+        }
+        return HTML;
+      };
 
       animate = true;
       setupInitialUpdate();

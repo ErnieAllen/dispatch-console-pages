@@ -33,6 +33,8 @@ var QDR = (function(QDR) {
       QDR.log.debug('QDR.ListControll started with location of ' + $location.path() + ' and connection of  ' + QDRService.management.connection.is_connected());
       let updateIntervalHandle = undefined,
         updateInterval = 5000,
+        last_updated = 0,
+        updateNow = false,
         ListExpandedKey = 'QDRListExpanded',
         SelectedEntityKey = 'QDRSelectedEntity',
         ActivatedKey = 'QDRActivatedKey';
@@ -194,7 +196,9 @@ var QDR = (function(QDR) {
       var onTreeNodeBeforeActivate = function (event, data) {
       // if node is toplevel entity
         if (data.node.data.typeName === 'entity') {
-        // if the current active node is not this one and not one of its children
+          return false;
+          /*
+          // if the current active node is not this one and not one of its children
           let active = data.tree.getActiveNode();
           if (active && !data.node.isActive() && data.node.isExpanded()) {  // there is an active node and it's not this one
             let any = false;
@@ -207,6 +211,7 @@ var QDR = (function(QDR) {
             if (!any) // none of the clicked on node's children was active
               return false;  // don't activate, just collapse this top level node
           }
+          */
         }
         return true;
       };
@@ -219,30 +224,34 @@ var QDR = (function(QDR) {
         $scope.ActivatedKey = data.node.key;
         let selectedNode = data.node;
         $scope.selectedTreeNode = data.node;
-        $timeout( function () {
-          if ($scope.currentMode.id === 'operations')
-            $scope.currentMode = $scope.modes[0];
-          else if ($scope.currentMode.id === 'log')
-            $scope.selectMode($scope.currentMode);
-          else if ($scope.currentMode.id === 'delete') {
+        if ($scope.currentMode.id === 'operations')
+          $scope.currentMode = $scope.modes[0];
+        else if ($scope.currentMode.id === 'log')
+          $scope.selectMode($scope.currentMode);
+        else if ($scope.currentMode.id === 'delete') {
           // clicked on a tree node while on the delete screen -> switch to attribute screen
-            $scope.currentMode = $scope.modes[0];
+          $scope.currentMode = $scope.modes[0];
+        }
+        if (selectedNode.data.typeName === 'entity') {
+          $scope.selectedEntity = selectedNode.key;
+          $scope.operations = lookupOperations();
+          updateExpandedEntities();
+        } else if (selectedNode.data.typeName === 'attribute') {
+          if (!selectedNode.parent)
+            return;
+          let sameEntity = $scope.selectedEntity === selectedNode.parent.key;
+          $scope.selectedEntity = selectedNode.parent.key;
+          $scope.operations = lookupOperations();
+          $scope.selectedRecordName = selectedNode.key;
+          updateDetails(selectedNode.data.details);   // update the table on the right
+          if (!sameEntity) {
+            updateNow = true;
           }
-          if (selectedNode.data.typeName === 'entity') {
-            $scope.selectedEntity = selectedNode.key;
-            $scope.operations = lookupOperations();
-            updateExpandedEntities();
-          } else if (selectedNode.data.typeName === 'attribute') {
-            $scope.selectedEntity = selectedNode.parent.key;
-            $scope.operations = lookupOperations();
-            $scope.selectedRecordName = selectedNode.key;
-            updateDetails(selectedNode.data.details);   // update the table on the right
-          } else if (selectedNode.data.typeName === 'none') {
-            $scope.selectedEntity = selectedNode.parent.key;
-            $scope.selectedRecordName = $scope.selectedEntity;
-            updateDetails(fromSchema($scope.selectedEntity));
-          }
-        });
+        } else if (selectedNode.data.typeName === 'none') {
+          $scope.selectedEntity = selectedNode.parent.key;
+          $scope.selectedRecordName = $scope.selectedEntity;
+          updateDetails(fromSchema($scope.selectedEntity));
+        }
       };
       var getExpanded = function (tree) {
         let list = [];
@@ -362,16 +371,15 @@ var QDR = (function(QDR) {
       // the alternative is to let the tree and grid determine the size of the page and have
       // the scroll bar on the window
         let viewport = $('#list-controller .pane-viewport');
-        console.log('resizer called');
-        console.log('window.innerHeight ' + window.innerHeight);
-        console.log('offset.top ' + viewport.offset().top);
-        console.log('resizer called setting grid veiwport height to ' + (window.innerHeight - viewport.offset().top));
-        viewport.height( window.innerHeight - viewport.offset().top);
+        let height = window.innerHeight - viewport.offset().top;
+        viewport.height( height );
         // don't allow HTML in the tree titles
         $('.fancytree-title').each( function () {
           let unsafe = $(this).html();
           $(this).html(unsafe.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
         });
+        let h = $scope.detailFields.length * 30 + 46;
+        $('.ui-grid-viewport').height(h);
       };
       $(window).resize(resizer);
 
@@ -461,6 +469,7 @@ var QDR = (function(QDR) {
         });
         $scope.detailFields = details;
         aggregateColumn();
+        resizer();
       };
 
       // called from html ng-style="getTableHeight()"
@@ -469,9 +478,9 @@ var QDR = (function(QDR) {
           height: (Math.max($scope.detailFields.length, 15) * 30 + 46) + 'px'
         };
       };
-
       var updateExpandedEntities = function () {
-        clearTimeout(updateIntervalHandle);
+        //resizer();
+        //clearTimeout(updateIntervalHandle);
         let tree = $('#entityTree').fancytree('getTree');
         if (tree) {
           let q = d3.queue(10);
@@ -505,8 +514,9 @@ var QDR = (function(QDR) {
             d3.selectAll('.ui-effects-placeholder').style('height', '0px');
             resizer();
 
+            last_updated = Date.now();
             // once all expanded tree nodes have been update, schedule another update
-            updateIntervalHandle = setTimeout(updateExpandedEntities, updateInterval);
+            //updateIntervalHandle = setTimeout(updateExpandedEntities, updateInterval);
           });
         }
       };
@@ -546,7 +556,6 @@ var QDR = (function(QDR) {
           callback(null);
           return;
         }
-
         var gotNodeInfo = function (nodeName, dotentity, response) {
           let tableRows = [];
           let records = response.results;
@@ -571,7 +580,6 @@ var QDR = (function(QDR) {
               if (!rowName) {
                 let msg = 'response attributeNames did not contain a name field';
                 QDR.log.error(msg);
-                console.dump(response.attributeNames);
                 callback(Error(msg));
                 return;
               }
@@ -885,6 +893,12 @@ var QDR = (function(QDR) {
           activate: onTreeNodeActivated,
           expand: onTreeNodeExpanded,
           beforeActivate: onTreeNodeBeforeActivate,
+          beforeSelect: function(event, data){
+            // A node is about to be selected: prevent this for folders:
+            if( data.node.isFolder() ){
+              return false;
+            }
+          },
           init: onTreeInitialized,
           selectMode: 1,
           autoCollapse: $scope.largeNetwork,
@@ -900,8 +914,23 @@ var QDR = (function(QDR) {
       };
       QDRService.management.topology.ensureAllEntities({entity: 'connection'}, function () {
         QDRService.management.topology.setUpdateEntities(['connection']);
+        // keep the list of routers up to date
         QDRService.management.topology.startUpdating(true);
       });
+
+      updateIntervalHandle = setInterval(function () {
+        if (!treeReady || !serviceReady)
+          return;
+        let now = Date.now();
+        if (((now - last_updated) >= updateInterval) || updateNow) {
+          updateNow = false;
+          $timeout( function () {
+            updateExpandedEntities();
+            resizer();
+          });
+        }
+      }, 100);
+
     }]);
 
   return QDR;

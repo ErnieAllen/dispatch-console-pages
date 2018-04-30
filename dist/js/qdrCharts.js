@@ -71,7 +71,7 @@ var QDR = (function (QDR) {
       }
       // create an svg object for each chart
       $scope.svgCharts.forEach ( function (c) {
-        c.generate();
+        c.generate(380);
         QDRChartService.sendChartRequest(c.chart.request(), true);
       });
       if (updateTimer)

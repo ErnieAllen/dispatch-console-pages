@@ -111,7 +111,7 @@ var QDR = (function(QDR) {
       // create an svg object for each chart
       $scope.overviewCharts.forEach ( function (c) {
         // tell c3 to create the svg
-        c.generate();
+        c.generate(360);
       });
       // redraw the charts once every second
       const updateRate = localStorage['updateRate'] ?  localStorage['updateRate'] : 1000;

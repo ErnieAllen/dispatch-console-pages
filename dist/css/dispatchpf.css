@@ -19,7 +19,7 @@
 
 /* The following are for matching Patternfly styles */
 span.logo {
-  letter-spacing: 4px;
+  letter-spacing: 3px;
 }
 
 .navbar-pf .navbar-brand {
@@ -92,8 +92,6 @@ ul.fancytree-container a {
 }
 
 /* override left and right pane styles */
-#overview-controller .col-sm-3,
-#list-controller .col-sm-3,
 #schema .col-sm-3,
 .qdr-topology-form.col-sm-3 {
   padding-left: 0px;
@@ -111,18 +109,10 @@ ul.fancytree-container a {
   padding-top: 0.5em;
 }
 
-div#list-controller {
-  padding-left: 0px;
-}
-
 .pane-viewport {
     position: relative;
     /* height: calc(100vh - 20px); */
     overflow: auto;
-}
-
-#list-controller .tree-header, #list-controller .tree-header select {
-    width: 100%;
 }
 
 [class^="icon-"],
@@ -166,6 +156,11 @@ div#list-controller {
 .icon-step-backward:before {
   font-family: FontAwesome;
   content: "\f048";
+}
+
+.icon-close:before {
+  font-family: FontAwesome;
+  content: "\f410";
 }
 
 [class^="icon-"]:before, [class*=" icon-"]:before {
@@ -333,5 +328,146 @@ circle.c3-circle._expanded_ {
 .code-branch:before {
   font-style: normal;
   font-family: FontAwesome;
-  content: "\f126";
+  /* content: "\f126"; */
+  content: "\f085"; /* cogs */
 }
+
+.icon-list:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f0db";
+}
+
+.icon-power:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f011";
+}
+
+.icon-ellipsis-v:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f142";
+}
+
+.icon-schema:before {
+  font-style: normal;
+  font-family: FontAwesome;
+  content: "\f0ca";
+}
+
+/* convert fancytree theme to dark */
+span.fancytree-title {
+  color: white;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 16em;
+}
+
+span.fancytree-node:hover {
+  color: black;
+  background-color: white;
+}
+span.fancytree-node:hover span.fancytree-title {
+  color: black;
+}
+
+span.fancytree-node.fancytree-active:hover, 
+span.fancytree-node.fancytree-active:hover span.fancytree-title {
+  color: white;
+}
+
+span.fancytree-expanded.fancytree-has-children, span.fancytree-expanded.fancytree-has-children + ul {
+  background-color: #444444;
+}
+span.fancytree-expanded.fancytree-has-children:hover {
+  background-color: white;
+}
+
+span.fancytree-node.fancytree-active {
+  background-color: #6aa3d5;
+}
+
+.navbar-fixed-top + .container-fluid {
+  padding-top: 71px;
+}
+
+@media (max-width: 768px) {
+  .navbar-fixed-top + .container-fluid {
+    padding-top: 38px;
+  }
+}
+
+.navbar-pf .navbar-nav>li>a {
+  padding: 14px 16px;
+}
+
+@media (min-width: 768px) {
+  .navbar-collapse.page-menu {
+    padding-right: 0;
+    /* height: calc(100vh - 74px) !important; */
+  }
+}
+@media (max-width: 768px) {
+  .navbar-collapse.page-menu {
+    position: absolute;
+    z-index: 1;
+    height: auto;
+    left: 0;
+  }
+}
+
+.page-menu {
+    padding-left: 0;
+    background: #333333;
+    z-index: 1;
+    transition: all .2s cubic-bezier(.35,0,.25,1);
+    position: absolute;
+    left: 0;
+    color: white;
+    width: 300px;
+}
+
+.page-menu-button {
+  /*color: black;
+  background: white; */
+  top: 0;
+  z-index: 2;
+  width: 1em;
+  padding: 4px 0 0 4px;
+  margin: 4px 0 0 4px;
+}
+.page-menu-button span.icon-bar {
+  display: block;
+  color: black;
+  background-color: black;
+  height: 4px;
+  width: 4px;
+  font-weight: bold;
+  border-radius: 2px;
+}
+
+.navbar-toggle.left {
+  float: left;
+}
+
+.hideLeft {
+  position: absolute;
+  right: -1.5em;
+  top: 0em;
+  border: 0;
+  color: white;
+  background-color: #444444;
+}
+
+.showLeft {
+  position: absolute;
+  top: 0em;
+  left: 0;
+  border: 0;
+  z-index: 3;
+  color: white;
+  background-color: #444444;
+}
+

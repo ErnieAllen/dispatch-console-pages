@@ -16,6 +16,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
+<style>
+    .page-menu-button {
+        display: none;
+    }
+
+  @media (max-width: 768px) {
+    div.aChart {
+        width: 380px;
+        margin-left: 0;
+    }
+}
+</style>
 <div class="main-display row-fluid qdrCharts" ng-controller="QDR.ChartsController">
     <div ng-show="hasCharts()">
         <div ng-repeat="chart in svgCharts" class="chartContainer">

@@ -204,25 +204,6 @@ div.grid-values.ngCellText span {
   margin-left: 430px;
 }
 
-#topologyForm.selected {
-  border: 1px solid blue;
-}
-#topologyForm {
-  border-right: 1px solid lightgray;
-  border-bottom: 1px solid lightgray;
-    /*border: 1px solid white;*/
-    padding: 2px;
-    /* position: relative; */
-    /* top: -8px; */
-}
-div.qdr-topology.pane.left .ngViewport {
-    /* border: 1px solid lightgray; */
-}
-
-#topologyForm > div {
-  width:396px;
-}
-
 /* globe */
 .land {
   fill: #999;
@@ -684,20 +665,6 @@ div.topoGrid .ui-grid-viewport {
 }
 .fancytree-node.loading {
   position: initial;
-}
-
-.hideLeft {
-  position: absolute;
-  right: 0.5em;
-  top: 1em;
-  border: 0;
-}
-
-.showLeft {
-  position: absolute;
-  top: 1em;
-  left: 0.5em;
-  border: 0;
 }
 
 .newChart {

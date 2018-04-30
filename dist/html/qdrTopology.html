@@ -18,6 +18,27 @@ under the License.
 -->
 
 <style>
+@media (min-width: 768px) {
+  .diagram {
+    padding-left: 300px;
+  }
+  .showLeft {
+      display: block;
+  }
+}
+@media (max-width: 768px) {
+  .diagram {
+      padding-left: 0 !important;
+  }
+  .showLeft {
+      display: none;
+  }
+
+}
+
+button.page-menu-button {
+    display: none;
+}
   #popover-div {
     position: absolute;
     z-index: 200;
@@ -35,24 +56,61 @@ under the License.
     font-size: 10px;
   }
 
+#topologyForm {
+  border-right: 1px solid lightgray;
+  border-bottom: 1px solid lightgray;
+  padding: 2px;
+  /* position: absolute; */
+  background-color: #333333;
+  width: 300px;
+}
+
+  #topologyForm .infoGrid span {
+      display: inline-block;
+      width: 50%;
+      height: 28px;
+      padding: 3px 6px 2px 6px;
+      border-right: 1px solid #666666;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+  }
+
+  #topologyForm .infoGrid span:last-child {
+      text-align: right;
+      border-right: 0;
+  }
+  #topologyForm .infoGrid div {
+      height: 28px;
+  }
+  #topologyForm .infoGrid div.odd {
+      background-color: #444444;
+  }
+
+  #topologyForm .infoGrid div.listening-on {
+      background-color: #336633;
+  }
+  .page-menu {
+      width: 300px;
+  }
+  
 </style>
-<div class="qdrTopology row-fluid" ng-controller="QDR.TopologyController">
-    <div id="popover-div" ng-bind-html="trustedpopoverContent"></div>
-    <div class="qdr-topology pane left" ng-controller="QDR.TopologyFormController">
-        <div id="topologyForm" ng-class="{selected : isSelected()}">
-            <div ng-if="form == 'router'">
-                <h4>Router Info</h4>
-                <div class="grid" ui-grid="topoGridOptions" ui-grid-auto-resize ng-style="infoStyle()"></div>
+<div class="qdrTopology row" ng-controller="QDR.TopologyController">
+    <div  ng-controller="QDR.TopologyFormController">
+        <div class="page-menu navbar-collapse collapse">
+            <div id="topologyForm">
+                <div>
+                    <h4>{{form}} Info</h4>
+                    <!-- <div id="routerInfo" class="grid" ui-grid="topoGridRouter" ng-style="infoStyle()"></div> -->
+                    <div id="formInfo"></div>
+                </div>
             </div>
-            <div ng-if="form == 'connection'">
-                <h4>Connection Info</h4>
-                <div class="grid" ui-grid="topoGridOptions" ui-grid-auto-resize ng-style="infoStyle()"></div>
-            </div>
+            <button ng-if="panelVisible" ng-click="hideLeftPane()" class="hideLeft" title="Hide"><i class="icon-step-backward"></i></button>
         </div>
-        <button ng-if="panelVisible" ng-click="hideLeftPane()" class="hideLeft" title="Hide"><i class="icon-step-backward"></i></button>
-        <button ng-if="!panelVisible" ng-click="showLeftPane()" class="hideLeft" title="Show"><i class="icon-step-forward"></i></button>
+        <button ng-if="!panelVisible" ng-click="showLeftPane()" class="showLeft" title="Show"><i class="icon-step-forward"></i></button>
     </div>
-    <div class="panel-adjacent">
+
+    <div class="diagram col-xs-12">
         <div id="topology"><!-- d3 toplogy here --></div>
         <div id="crosssection"></div><div id="crosshtml" ng-bind-html="crosshtml"></div>
 
@@ -62,7 +120,7 @@ under the License.
                 <li class="na" ng-class="{'force-display': isFixed()}" ng-click="setFixed(false)">Unfreeze</li>
             </ul>
         </div>
-        <div id="svg_legend"></div>
+        <div id="svg_legend" class="hidden-xs"></div>
         <div id="multiple_details">
             <h4 class="grid-title">Connections</h4>
             <div class="grid" ui-grid="multiDetails" ui-grid-selection ui-grid-auto-resize ng-style="connectionsStyle()"></div>
@@ -72,6 +130,7 @@ under the License.
             <div class="grid" ui-grid="linkDetails" ui-grid-auto-resize ng-style="linksStyle()"></div>
         </div>
     </div>
+    <div id="popover-div" ng-bind-html="trustedpopoverContent"></div>
 </div>
 
 <script type="text/ng-template" id="titleHeaderCellTemplate.html">

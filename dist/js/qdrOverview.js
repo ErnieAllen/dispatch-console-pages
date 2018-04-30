@@ -1497,8 +1497,8 @@ var QDR = (function (QDR) {
       // the effect is that the tree and the grid will have vertical scroll bars if needed.
       // the alternative is to let the tree and grid determine the size of the page and have
       // the scroll bar on the window
-      let viewport = $('#overview-controller .pane-viewport');
-      viewport.height( window.innerHeight - viewport.offset().top);
+      //let viewport = $('#overview-controller .pane-viewport');
+      //viewport.height( window.innerHeight - viewport.offset().top);
 
       // don't allow HTML in the tree titles
       $('.fancytree-title').each( function () {

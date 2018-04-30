@@ -17,23 +17,26 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<style>
+    .alert {
+        margin-top: 4em;
+    }
+
+</style>
 <div class="row-fluid" ng-controller="QDR.SettingsController">
-    <div class="login container" ng-hide="connecting">
-        <div class="row" id="dispatch-login-container">
-            <div class="connect-column">
-                <div class="col-md-2 control-label"></div>
-                <div class="col-md-6 alert alert-success">
+    <div class="login" ng-hide="connecting">
+        <div class="col-xs-1"></div>
+        <div class="col-xs-10">
+            <div class="alert alert-success">
                     <p>
-                        Enter the address and a HTML-enabled port of a <strong><a href="http://qpid.apache.org/components/dispatch-router/" target="_blank">Qpid Dispatch Router</a></strong> to connect..
+                        Enter the address and a HTML-enabled port of a <strong><a href="http://qpid.apache.org/components/dispatch-router/" target="_blank">Qpid Dispatch Router</a></strong>.
                     </p>
                     <!--
                     <p>
                         If Autostart is checked, you will be automatically logged in to the router the next time you start the console.
                     </p> -->
 
-                </div>
             </div>
-            <p style="clear:left;"></p>
             <div class="connect-form">
                 <form class="form-horizontal no-bottom-margin" novalidate ng-submit="connect()" name="settings">
                         <div class="form-group">
@@ -69,6 +72,7 @@ under the License.
 
             </div>
         </div>
+        <div class="col-xs-1"></div>
     </div>
 
     <div class="centered" ng-show="connecting">

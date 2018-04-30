@@ -24,50 +24,69 @@ under the License.
  */
 var QDR = (function(QDR) {
 
-  QDR.module.controller('QDR.TopologyFormController', function($scope, $rootScope, $timeout, QDRService) {
+  QDR.module.controller('QDR.TopologyFormController', function($scope, $timeout) {
 
     $scope.attributes = [];
-    const nameTemplate =  '<div title="{{row.entity.description}}" class="ui-grid-cell-contents {{row.entity.cls}}">{{COL_FIELD CUSTOM_FILTERS | pretty}}</div>';
-    const valueTemplate = '<div title="{{row.entity.attributeValue}}" class="ui-grid-cell-contents {{row.entity.cls}}">{{COL_FIELD CUSTOM_FILTERS | pretty}}</div>';
+    $scope.attributesConnections = [];
 
-    $scope.topoGridOptions = {
-      data: 'attributes',
-      enableColumnResize: false,
-      multiSelect: false,
-      jqueryUIDraggable: true,
-      columnDefs: [{
-        field: 'attributeName',
-        displayName: 'Attribute',
-        cellTemplate: nameTemplate
-      }, {
-        field: 'attributeValue',
-        displayName: 'Value',
-        cellTemplate: valueTemplate
-      }]
-    };
-    $scope.form = 'router';
+    $scope.form = 'Router';
     $scope.$on('showEntityForm', function(event, args) {
       let attributes = args.attributes;
-      let entityTypes = QDRService.management.schema().entityTypes[args.entity].attributes;
-      attributes.forEach(function(attr) {
-        attr.cls = '';
-        if (attr.attributeName === 'Listening on')
-          attr.cls = 'listening-on';
-        if (entityTypes[attr.attributeName] && entityTypes[attr.attributeName].description) {
-          attr.description = entityTypes[attr.attributeName].description;
-        }
-      });
-      $scope.attributes = attributes;
-      $scope.form = args.entity;
-      $timeout( function () {
+      // capitalize 1st letter
+      $scope.form = args.entity.charAt(0).toUpperCase() + args.entity.slice(1);
 
+      let H = '<div class="infoGrid">';
+      attributes.forEach( function (a, i) {
+        let even = (i % 2) ? 'even' : 'odd';
+        if (a.attributeName === 'Listening on')
+          even += ' listening-on';
+        H += ('<div class="'+ even +'"><span title="'+a.attributeName+'">' + a.attributeName + '</span><span title="'+a.attributeValue+'">' + a.attributeValue + '</span></div>');
       });
+      H += '</div>';
+      $('#formInfo').html(H);
+
+      if (!$scope.$$phase) $scope.$apply();
+
     });
     $scope.infoStyle = function () {
       return {
         height: (Math.max($scope.attributes.length, 15) * 30 + 46) + 'px'
       };
     };
+
+    $scope.panelVisible = true;  // show/hide the panel on the left
+    $scope.hideLeftPane = function () {
+      d3.select('.page-menu')
+        .style('left' , '-360px')
+        .style('z-index', '1');
+
+      d3.select('.diagram')
+        .transition().duration(300).ease('sin-in')
+        .style('margin-left', '-360px')
+        .each('end', function () {
+          $timeout(function () {$scope.panelVisible = false;});
+          let div = d3.select(this);
+          div.style('margin-left', '0');
+          div.style('padding-left', 0);
+        });
+    };
+    $scope.showLeftPane = function () {
+      d3.select('.page-menu')
+        .style('left' , '0px');
+
+      $timeout(function () {$scope.panelVisible = true;});
+      d3.select('.diagram')
+        .style('margin-left', '0px')
+        .transition().duration(300).ease('sin-out')
+        .style('margin-left', '300px')
+        .each('end', function () {
+          let div = d3.select(this);
+          div.style('margin-left', '0');
+          div.style('padding-left', '300px');
+        });
+    };
+
+
   });
   /**
    * @method TopologyController
@@ -81,34 +100,6 @@ var QDR = (function(QDR) {
       $scope.quiesceState = {};
       let dontHide = false;
       $scope.crosshtml = $sce.trustAsHtml('');
-
-      $scope.panelVisible = true;  // show/hide the panel on the left
-      $scope.hideLeftPane = function () {
-        d3.select('.qdr-topology.pane.left')
-          .transition().duration(300).ease('sin-in')
-          .style('left' , '-380px');
-
-        d3.select('.panel-adjacent')
-          .transition().duration(300).ease('sin-in')
-          .style('margin-left', '30px')
-          .each('end', function () {
-            resize();
-            $timeout(function () {$scope.panelVisible = false;});
-          });
-      };
-      $scope.showLeftPane = function () {
-        d3.select('.qdr-topology.pane.left')
-          .transition().duration(300).ease('sin-out')
-          .style('left' , '0px');
-
-        d3.select('.panel-adjacent')
-          .transition().duration(300).ease('sin-out')
-          .style('margin-left', '430px')
-          .each('end', function () {
-            resize();
-            $timeout(function () {$scope.panelVisible = true;});
-          });
-      };
 
       $scope.quiesceConnection = function(row) {
         let entity = row.entity;
@@ -393,7 +384,10 @@ var QDR = (function(QDR) {
       let height = 0;
 
       var getSizes = function() {
-        const legendWidth = 143;
+        let legendWidth = 143;
+        let display = $('#svg_legend').css('display');
+        if (display === 'none')
+          legendWidth = 0;
         const gap = 5;
         let width = $('#topology').width() - gap - legendWidth;
         let top = $('#topology').offset().top;
@@ -883,7 +877,7 @@ var QDR = (function(QDR) {
                 attributes.splice(1, 0, {
                   attributeName: 'Listening on',
                   attributeValue: ports,
-                  description: 'The port on which this router is listening for connections'
+                  description: 'The port(s) on which this router is listening for connections'
                 });
               }
             }
@@ -962,8 +956,6 @@ var QDR = (function(QDR) {
 
         // draw directed edges with proper padding from node centers
         path.attr('d', function(d) {
-          //QDR.log.debug("in tick for d");
-          //console.dump(d);
           let sourcePadding, targetPadding, r;
 
           if (d.target.nodeType == 'inter-router') {
@@ -993,10 +985,10 @@ var QDR = (function(QDR) {
             sourceY = dsy + (sourcePadding * normY),
             targetX = dtx - (targetPadding * normX),
             targetY = dty - (targetPadding * normY);
-          sourceX = Math.max(0, Math.min(width, sourceX));
-          sourceY = Math.max(0, Math.min(width, sourceY));
-          targetX = Math.max(0, Math.min(width, targetX));
-          targetY = Math.max(0, Math.min(width, targetY));
+          sourceX = Math.max(0, sourceX);
+          sourceY = Math.max(0, sourceY);
+          targetX = Math.max(0, targetX);
+          targetY = Math.max(0, targetY);
 
           return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         });

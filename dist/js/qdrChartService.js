@@ -597,7 +597,7 @@ var QDR = (function(QDR) {
         },
 
         // constructor for a c3 area chart
-        pfAreaChart: function (chart, chartId, defer) {
+        pfAreaChart: function (chart, chartId, defer, width) {
           if (!chart)
             return;
 
@@ -614,7 +614,7 @@ var QDR = (function(QDR) {
           this.colors = d3.scale.category10().range();
 
           if (!defer)
-            this.generate();
+            this.generate(width);
         },
 
         // aggregate chart is based on pfAreaChart
@@ -644,7 +644,7 @@ var QDR = (function(QDR) {
       self.pfAggChart.prototype.constructor = self.pfAggChart;
 
       // create the svg and bind it to the given div.id
-      self.pfAreaChart.prototype.generate = function () {
+      self.pfAreaChart.prototype.generate = function (width) {
         let chart = this.chart;  // for access during chart callbacks
         let self = this;
 
@@ -654,6 +654,10 @@ var QDR = (function(QDR) {
         let c3ChartDefaults = $().c3ChartDefaults();
         let singleAreaChartConfig = c3ChartDefaults.getDefaultSingleAreaConfig();
         singleAreaChartConfig.bindto = '#' + this.htmlId;
+        singleAreaChartConfig.size = {
+          width: width || 400,
+          height: 200
+        };
         singleAreaChartConfig.data = {
           x: 'x',           // x-axis is named x
           columns: [[]],

@@ -149,7 +149,6 @@ var QDR = (function(QDR) {
         return;
       }
 
-      $scope.nodes = [];
       let excludedEntities = ['management', 'org.amqp.management', 'operationalEntity', 'entity', 'configurationEntity', 'dummy', 'console'];
       let aggregateEntities = ['router.address'];
 
@@ -235,7 +234,7 @@ var QDR = (function(QDR) {
         if (selectedNode.data.typeName === 'entity') {
           $scope.selectedEntity = selectedNode.key;
           $scope.operations = lookupOperations();
-          updateExpandedEntities();
+          updateNow = true;
         } else if (selectedNode.data.typeName === 'attribute') {
           if (!selectedNode.parent)
             return;
@@ -345,7 +344,7 @@ var QDR = (function(QDR) {
         }
         // top level node was expanded
         if (wasExpanded)
-          node.setExpanded(true, {noAnimation: true, noEvents: true});
+          node.setExpanded(true, {noAnimation: true, noEvents: true, noFocus: true});
         // if the parent node was active, but none of the children were active, active the 1st child
         if (wasActive) {
           if (!activeChildKey) {
@@ -359,9 +358,9 @@ var QDR = (function(QDR) {
           newNode = tree.getNodeByKey(activeChildKey);
           // the node may not be there after the update
           if (newNode)
-            newNode.setActive(true); // fires the onTreeNodeActivated event for this node
+            newNode.setActive(true, {noFocus: true}); // fires the onTreeNodeActivated event for this node
         }
-        resizer();
+        //resizer();
       };
 
 
@@ -370,9 +369,6 @@ var QDR = (function(QDR) {
       // the effect is that the tree and the grid will have vertical scroll bars if needed.
       // the alternative is to let the tree and grid determine the size of the page and have
       // the scroll bar on the window
-        let viewport = $('#list-controller .pane-viewport');
-        let height = window.innerHeight - viewport.offset().top;
-        viewport.height( height );
         // don't allow HTML in the tree titles
         $('.fancytree-title').each( function () {
           let unsafe = $(this).html();
@@ -479,8 +475,6 @@ var QDR = (function(QDR) {
         };
       };
       var updateExpandedEntities = function () {
-        //resizer();
-        //clearTimeout(updateIntervalHandle);
         let tree = $('#entityTree').fancytree('getTree');
         if (tree) {
           let q = d3.queue(10);
@@ -515,17 +509,20 @@ var QDR = (function(QDR) {
             resizer();
 
             last_updated = Date.now();
-            // once all expanded tree nodes have been update, schedule another update
-            //updateIntervalHandle = setTimeout(updateExpandedEntities, updateInterval);
           });
         }
       };
 
+      // The selection dropdown (list of routers) was changed.
       $scope.selectNode = function(node) {
         $scope.selectedNode = node.name;
         $scope.selectedNodeId = node.id;
-        $timeout(setCurrentNode);
+        $timeout( function () {
+          setCurrentNode();
+          updateNow = true;
+        });
       };
+
       $scope.$watch('ActivatedKey', function(newValue, oldValue) {
         if (newValue !== oldValue) {
           localStorage[ActivatedKey] = $scope.ActivatedKey;
@@ -625,7 +622,6 @@ var QDR = (function(QDR) {
       // tableRows are the records that were returned, this populates the left hand tree on the page
       var selectRow = function (info) {
         updateTreeChildren(info.entity, info.rows, info.expand);
-      //fixTooltips();
       };
       $scope.detailFields = [];
 
@@ -815,12 +811,15 @@ var QDR = (function(QDR) {
         });
       }
       var setCurrentNode = function () {
+        let currentNode;
         $scope.nodes.some( function (node, i) {
           if (node.name === $scope.selectedNode) {
-            $scope.currentNode = $scope.nodes[i];
+            currentNode = $scope.nodes[i];
             return true;
           }
         });
+        if ($scope.currentNode !== currentNode)
+          $scope.currentNode = currentNode;
       };
 
       let treeReady = false;
@@ -921,6 +920,7 @@ var QDR = (function(QDR) {
       updateIntervalHandle = setInterval(function () {
         if (!treeReady || !serviceReady)
           return;
+
         let now = Date.now();
         if (((now - last_updated) >= updateInterval) || updateNow) {
           updateNow = false;
